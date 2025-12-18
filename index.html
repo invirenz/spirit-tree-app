@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | Ghibli Radio</title>
+    <title>Sakura Spirit | Lo-Fi Forest</title>
     <style>
         :root {
             --ghibli-sky: #87ceeb;
@@ -15,208 +15,103 @@
         body {
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            position: relative;
         }
 
+        /* --- CLOUDS & PETALS --- */
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 100px;
+            filter: blur(15px);
+            animation: moveClouds linear infinite;
+            z-index: 1;
+        }
+        .c1 { width: 200px; height: 60px; top: 10%; left: -250px; animation-duration: 60s; }
+        .c2 { width: 300px; height: 90px; top: 20%; left: -400px; animation-duration: 90s; }
+        
+        @keyframes moveClouds {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(100vw + 500px)); }
+        }
+
+        .petal {
+            position: absolute;
+            background: var(--sakura-pink);
+            border-radius: 150% 0 150% 150%;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 5px white;
+        }
+
+        /* --- UI CONTAINER --- */
         #ui-container {
             text-align: center;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 40px;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 30px;
             border-radius: 40px;
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             z-index: 10;
+            width: 340px;
         }
 
-        .stats { font-size: 1.2rem; font-weight: bold; color: white; margin-bottom: 20px; }
+        .stats { 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            color: white; 
+            margin-bottom: 15px; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-        /* --- CSS ANIMATED TREE --- */
+        /* --- EVOLVING CSS TREE --- */
         #spirit-stage {
             height: 200px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            margin: 20px 0;
+            margin-bottom: 25px;
             position: relative;
         }
 
-        .tree-container {
-            position: relative;
-            transition: all 1s ease-in-out;
+        /* Stage 0: Seed */
+        .seed { 
+            width: 30px; height: 35px; background: #8d6e63; 
+            border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; 
         }
 
-        /* Seed Stage */
-        .seed {
-            width: 20px;
-            height: 25px;
-            background: #8d6e63;
-            border-radius: 50% 50% 40% 40%;
-            animation: pulse 2s infinite;
+        /* Stage 1: Sprout (1-4 Shrines) */
+        .sprout { 
+            width: 12px; height: 60px; background: #aed581; position: relative; 
+            border-radius: 5px 5px 0 0;
+        }
+        .sprout::after { 
+            content: ''; width: 30px; height: 15px; background: #81c784; 
+            border-radius: 0 100% 0 100%; position: absolute; top: 15px; left: 8px; 
+        }
+        
+        /* Stage 2: Tree (5+ Shrines) */
+        .full-tree { 
+            width: 22px; height: 100px; background: var(--trunk-brown); 
+            position: relative; border-radius: 10px 10px 0 0;
+        }
+        .canopy { 
+            width: 160px; height: 140px; background: var(--sakura-pink); 
+            border-radius: 50%; position: absolute; top: -110px; left: -69px; 
+            filter: blur(2px); box-shadow: 0 0 30px var(--sakura-pink);
+            animation: float 4s infinite ease-in-out; 
         }
 
-        /* Sprout Stage (Milestone 1) */
-        .sprout {
-            width: 8px;
-            height: 40px;
-            background: #aed581;
-            position: relative;
-        }
-        .leaf {
-            width: 20px;
-            height: 10px;
-            background: #81c784;
-            border-radius: 0 100% 0 100%;
-            position: absolute;
-            top: 5px; left: 5px;
-        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* Full Tree (Milestone 5+) */
-        .full-tree {
-            width: 15px;
-            height: 80px;
-            background: var(--trunk-brown);
-            position: relative;
-        }
-        .canopy {
-            width: 120px;
-            height: 100px;
-            background: var(--sakura-pink);
-            border-radius: 50%;
-            position: absolute;
-            top: -80px;
-            left: -52px;
-            filter: blur(2px);
-            box-shadow: 0 0 20px var(--sakura-pink);
-            animation: float 4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.1); opacity: 1; }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* --- BUTTONS --- */
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .play-btn {
-            background: white;
-            border: none;
-            color: var(--ui-accent);
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .plant-btn {
-            background: var(--ui-accent);
-            border: none;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .play-btn:active, .plant-btn:active { transform: scale(0.95); }
-
-        #track-name { font-size: 0.8rem; margin-top: 15px; color: #333; }
-    </style>
-</head>
-<body>
-
-<div id="ui-container">
-    <div class="stats">
-        🌸 PETALS: <span id="sap-count">0</span><br>
-        ⛩️ SHRINES: <span id="tree-count">0</span>
-    </div>
-
-    <div id="spirit-stage">
-        <div id="tree-visual" class="tree-container seed"></div>
-    </div>
-
-    <div class="btn-group">
-        <button id="play-btn" class="play-btn">START RADIO</button>
-        <button id="plant-btn" class="plant-btn">NURTURE FOREST (1,000 🌸)</button>
-    </div>
-    <p id="track-name">READY</p>
-</div>
-
-<script>
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
-    
-    const sapLabel = document.getElementById('sap-count');
-    const treeLabel = document.getElementById('tree-count');
-    const treeVisual = document.getElementById('tree-visual');
-    const plantBtn = document.getElementById('plant-btn');
-
-    function updateTreeVisual() {
-        treeVisual.innerHTML = ""; // Clear
-        treeVisual.className = "tree-container";
-
-        if (state.totalPlanted < 1) {
-            treeVisual.classList.add("seed");
-        } 
-        else if (state.totalPlanted < 5) {
-            treeVisual.classList.add("sprout");
-            treeVisual.innerHTML = '<div class="leaf"></div>';
-        } 
-        else {
-            treeVisual.classList.add("full-tree");
-            treeVisual.innerHTML = '<div class="canopy"></div>';
-        }
-    }
-
-    function updateUI() {
-        sapLabel.textContent = Math.floor(state.sap).toLocaleString();
-        treeLabel.textContent = state.totalPlanted;
-        updateTreeVisual();
-        localStorage.setItem('spiritTreeSave', JSON.stringify(state));
-    }
-
-    // Petal Earning
-    setInterval(() => {
-        state.sap += 1;
-        updateUI();
-    }, 1000);
-
-    // Nurture Button
-    plantBtn.onclick = () => {
-        if (state.sap >= 1000) {
-            state.sap -= 1000;
-            state.totalPlanted += 1;
-            updateUI();
-        } else {
-            alert("Not enough petals!");
-        }
-    };
-
-    // --- AUDIO PLACEHOLDER (Use previous audio logic here if desired) ---
-    const playBtn = document.getElementById('play-btn');
-    playBtn.onclick = () => {
-        playBtn.textContent = "PLAYING...";
-        // Intersert your playlist fetch logic here
-    };
-
-    updateUI();
-</script>
-</body>
-</html>
+        /* --- UI ELEMENTS --- */
+        .plant-
