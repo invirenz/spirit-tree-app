@@ -80,16 +80,9 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s ease;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             display: inline-block;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .play-btn:active {
-            transform: scale(0.92);
-            background: #ffffff;
         }
 
         .plant-btn {
@@ -101,7 +94,6 @@
             cursor: pointer;
             margin-top: 25px;
             font-size: 0.9rem;
-            transition: 0.3s;
         }
 
         .leaf {
@@ -113,17 +105,11 @@
             z-index: 0;
         }
 
-        @keyframes pulseAura {
-            0% { opacity: 0.2; transform: scale(0.9); }
-            100% { opacity: 0.5; transform: scale(1.1); }
-        }
-
         #track-name {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             opacity: 0.8;
             margin-top: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
+            color: #ff5555; /* Changed to red to highlight errors */
         }
     </style>
 </head>
@@ -142,29 +128,27 @@
 
     <div class="music-player">
         <button id="play-btn" class="play-btn">START RADIO</button>
-        <p id="track-name">SIGNAL READY</p>
+        <p id="track-name">READY</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
 
 <script>
-    // --- 1. CONFIG & STATE ---
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastUpdateTime = Date.now();
     let isPlaying = false;
     let currentTrackIndex = 0;
 
+    // We use absolute paths (starting with /) to ensure Vercel finds the assets folder
     const playlist = [
-        { name: "After Light", src: "assets/After_Light_mastered.mp3" },
-        { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
-        { name: "Half of Me", src: "assets/Half_of_Me_mastered.mp3" },
-        { name: "W.D.I.D.", src: "assets/WDID.mp3" }
+        { name: "After Light", src: "/assets/After_Light_mastered.mp3" },
+        { name: "Get Away", src: "/assets/Get_Away_mastered.mp3" },
+        { name: "Half of Me", src: "/assets/Half_of_Me_mastered.mp3" },
+        { name: "W.D.I.D.", src: "/assets/WDID.mp3" }
     ];
 
-    // Global audio object
     const audio = new Audio();
-    audio.crossOrigin = "anonymous";
     
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
@@ -173,7 +157,6 @@
     const plantBtn = document.getElementById('plant-btn');
     const treeArt = document.getElementById('tree-art');
 
-    // --- 2. GAME ENGINE ---
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
@@ -182,8 +165,7 @@
 
     function gameLoop() {
         const now = Date.now();
-        const elapsed = now - lastUpdateTime;
-        if (elapsed >= 1000) {
+        if (now - lastUpdateTime >= 1000) {
             state.sap += 1;
             lastUpdateTime = now;
             updateUI();
@@ -194,37 +176,40 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- 3. THE "FORCE" MUSIC TRIGGER ---
+    // --- DEBUGGING AUDIO ---
+    audio.onerror = () => {
+        const errors = ["Unknown", "Aborted", "Network", "Decode", "Source Not Supported"];
+        trackLabel.textContent = "FILE ERROR: " + (errors[audio.error.code] || "Unknown");
+        trackLabel.style.color = "#ff5555";
+    };
+
     async function toggleRadio() {
-        // 1. Immediately try to load the source to show the browser we mean business
-        if (!audio.src || audio.src === "" || audio.src.endsWith('/')) {
+        trackLabel.style.color = "#00ffff";
+        
+        if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
             audio.src = playlist[currentTrackIndex].src;
-            audio.load(); 
+            audio.load();
         }
 
         if (audio.paused) {
-            // Use a promise to catch specific browser rejection
-            audio.play().then(() => {
+            try {
+                await audio.play();
                 isPlaying = true;
                 playBtn.textContent = "STOP RADIO";
                 trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
-                console.log("Audio playing successfully.");
-            }).catch(e => {
-                console.error("Playback Error:", e);
-                // Fallback for mobile/stricter browsers
-                trackLabel.textContent = "TAP AGAIN TO UNLOCK AUDIO";
-            });
+            } catch (e) {
+                trackLabel.textContent = "BROWSER BLOCKED: CLICK AGAIN";
+                console.log(e);
+            }
         } else {
             audio.pause();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
-            trackLabel.textContent = "SIGNAL PAUSED";
+            trackLabel.textContent = "PAUSED";
         }
     }
 
-    // --- 4. EVENT LISTENERS ---
-    // Using both mousedown and click to catch the fastest interaction possible
-    playBtn.addEventListener('click', toggleRadio);
+    playBtn.onclick = toggleRadio;
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -238,7 +223,7 @@
             state.sap -= 1000;
             state.totalPlanted += 1;
             updateUI();
-            try { await fetch('/api/plant', { method: 'POST' }); } catch (e) {}
+            fetch('/api/plant', { method: 'POST' }).catch(() => {});
         } else {
             alert("Need 1,000 Sap!");
         }
@@ -252,16 +237,13 @@
         leaf.style.width = size;
         leaf.style.height = size;
         document.body.appendChild(leaf);
-        leaf.animate([
-            { transform: 'translateY(-10vh) rotate(0deg)', opacity: 0 },
-            { transform: 'translateY(110vh) rotate(360deg)', opacity: 0 }
-        ], { duration: Math.random() * 3000 + 6000 }).onfinish = () => leaf.remove();
+        leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], 
+        { duration: 6000 }).onfinish = () => leaf.remove();
     }
 
     setInterval(createLeaf, 2000);
     updateUI();
     requestAnimationFrame(gameLoop);
-
 </script>
 </body>
 </html>
