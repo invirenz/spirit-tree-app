@@ -11,61 +11,57 @@
             --rarity-mythic: #ff4500;
             --rarity-god: #ffcc00;
             --rarity-ur: #ff00ff;
+            --rarity-ssr: #00ffff;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             overflow: hidden; color: #333;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
+        /* PETAL ANIMATION */
         .petal {
             position: absolute; background: var(--sakura);
             border-radius: 150% 0 150% 150%; z-index: 1; pointer-events: none;
         }
 
+        /* MAIN PANEL */
         .panel {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.9);
             padding: 25px; border-radius: 40px;
             width: 320px; text-align: center; z-index: 10;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            border: 2px solid white;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border: 2px solid white; backdrop-filter: blur(10px);
         }
 
-        #tree-stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin: 15px; }
-        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s ease; }
+        /* TREE SYSTEM */
+        #tree-stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin: 15px; position: relative; }
+        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .leaves { 
             position: absolute; background: var(--sakura); 
             border-radius: 50%; filter: blur(2px); transition: 0.8s ease;
-            box-shadow: 0 0 20px rgba(255, 183, 197, 0.5);
+            box-shadow: 0 0 20px rgba(255, 183, 197, 0.6);
         }
 
+        /* UI ELEMENTS */
         .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .game-card {
+        .card {
             background: white; border: 2px solid #eee; padding: 12px;
             border-radius: 20px; cursor: pointer; font-weight: bold;
             transition: 0.2s; font-size: 13px;
         }
-        .game-card:hover { transform: scale(1.05); border-color: var(--sakura); }
-
-        /* FOOTER / MUSIC */
-        .footer {
-            position: absolute; bottom: 15px; width: 100%;
-            display: flex; flex-direction: column; align-items: center; z-index: 1000;
-        }
-        .controls {
-            background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 50px;
-            display: flex; align-items: center; gap: 12px; border: 2px solid white;
-        }
-        input[type=range] { accent-color: var(--sakura); cursor: pointer; }
+        .card:hover { transform: translateY(-3px); border-color: var(--sakura); }
 
         .btn {
             background: var(--green); color: white; border: none;
             padding: 12px; border-radius: 50px; width: 100%;
             font-weight: bold; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 4px 0 #3e603d;
         }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
 
         /* OVERLAYS */
         .overlay {
@@ -73,62 +69,87 @@
             background: rgba(0,0,0,0.95); z-index: 2000; display: none;
             flex-direction: column; align-items: center; justify-content: center;
         }
-        .char-tag { padding: 5px 10px; border-radius: 10px; margin: 5px; font-weight: bold; font-size: 12px; }
+
+        /* GACHA FLASH ANIMATION */
+        @keyframes flash-gold { 0% { background: gold; } 100% { background: rgba(0,0,0,0.95); } }
+        @keyframes flash-mythic { 0% { background: var(--rarity-mythic); } 100% { background: rgba(0,0,0,0.95); } }
+        .animate-gold { animation: flash-gold 1.5s ease-out; }
+        .animate-mythic { animation: flash-mythic 1.5s ease-out; }
+
+        /* MUSIC PLAYER */
+        .footer {
+            position: absolute; bottom: 20px; width: 100%;
+            display: flex; flex-direction: column; align-items: center; z-index: 1000;
+        }
+        .music-bar {
+            background: rgba(0,0,0,0.85); padding: 10px 25px; border-radius: 50px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            border: 2px solid var(--sakura);
+        }
+        input[type=range] { accent-color: var(--sakura); cursor: pointer; width: 120px; }
     </style>
 </head>
 <body>
 
     <div id="hub-ui" class="panel">
-        <h1 style="margin:0; font-size: 1.3rem;">SAKURA HUB</h1>
-        <h2 id="p-display" style="color: var(--green);">0 🌸</h2>
-        <p style="font-size: 11px;">Tree Level: <span id="lv-display">1</span> / 100</p>
-        <div id="tree-stage"><div id="tree-core"></div></div>
+        <h1 style="margin:0; font-size: 1.4rem; letter-spacing: 1px;">SAKURA SPIRIT</h1>
+        <h2 id="p-display" style="color: var(--green); margin: 5px 0;">0 🌸</h2>
+        <p style="font-size: 11px; margin: 0;">Tree Evolution: <span id="lv-display">1</span> / 100</p>
+        
+        <div id="tree-stage"><div id="tree-core" class="trunk"></div></div>
         
         <button class="btn" onclick="nurture()">NURTURE (1,000 🌸)</button>
 
         <div class="game-grid">
-            <div class="game-card" onclick="openMode('delivery')">🧹 DELIVERY</div>
-            <div class="game-card" onclick="openMode('rpg')">⚔️ BATTLE</div>
-            <div class="game-card" onclick="openMode('summon')" style="grid-column: span 2; background: #fff4e6;">✨ SUMMON SPIRITS</div>
+            <div class="card" onclick="openUI('delivery')">🧹 DELIVERY</div>
+            <div class="card" onclick="openUI('rpg')">⚔️ BATTLE</div>
+            <div class="card" onclick="openUI('summon')" style="grid-column: span 2; background: #fff5f7;">✨ SUMMON SPIRITS</div>
         </div>
     </div>
 
     <div id="summon-overlay" class="overlay">
-        <h2 style="color:gold;">SPIRIT GATE</h2>
-        <div id="summon-result" style="height: 100px; color: white; font-size: 24px; font-weight: bold;">???</div>
-        <button class="btn" style="width:200px; background: #9b59b6;" onclick="drawSpirit()">SUMMON (500 🌸)</button>
-        <button class="btn" style="width:200px; background: grey; margin-top:20px;" onclick="closeOverlays()">BACK</button>
+        <h2 style="color:white; letter-spacing: 2px;">SPIRIT GATE</h2>
+        <div id="summon-card" style="width: 200px; height: 280px; border: 4px solid white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; margin: 20px 0; background: rgba(255,255,255,0.1);">
+            ?
+        </div>
+        <button class="btn" style="width:200px; background: #9b59b6;" onclick="summon()">SUMMON (500 🌸)</button>
+        <button class="btn" style="width:200px; background: #555;" onclick="closeUI()">BACK</button>
     </div>
 
     <div id="rpg-overlay" class="overlay">
-        <div style="color:white; margin-bottom: 20px;">ZEN METER: <span id="zen-bar">0</span>%</div>
-        <div id="battle-scene" style="display:flex; gap:30px; align-items:center; color:white;">
-            <div id="my-team">
-                <div class="char-tag" style="background:var(--rarity-god)">GOD HERO</div>
-                <div class="char-tag" style="background:var(--rarity-mythic)">MYTHIC HERO</div>
-                <div class="char-tag" style="background:var(--rarity-ur)">UR HERO</div>
+        <div style="color:white; margin-bottom: 20px; font-weight: bold;">ZEN METER: <span id="zen-bar">0</span>%</div>
+        <div style="display:flex; gap:30px; align-items:center; color:white;">
+            <div id="player-team" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="background:var(--rarity-god); padding:5px; border-radius:5px;">[GOD] Character</div>
+                <div style="background:var(--rarity-mythic); padding:5px; border-radius:5px;">[MYTHIC] Character</div>
             </div>
-            <div style="color:red; font-size:30px; font-weight:bold;">VS</div>
-            <div id="enemy-team">👹 BOSS 👹</div>
+            <div style="font-size: 40px;">VS</div>
+            <div style="font-size: 50px;">👹</div>
         </div>
-        <div style="margin-top:30px; display:flex; gap:10px;">
-            <button class="btn" style="width:100px" onclick="battleStep('atk')">ATTACK</button>
-            <button class="btn" style="width:100px; background:orange" onclick="battleStep('zen')">ZEN ULTI</button>
-            <button class="btn" style="width:100px; background:grey" onclick="closeOverlays()">RETREAT</button>
+        <div style="margin-top:40px; display:flex; gap:10px;">
+            <button class="btn" style="width:100px" onclick="battle('atk')">ATTACK</button>
+            <button class="btn" style="width:100px; background:orange" onclick="battle('zen')">ZEN ULTI</button>
+            <button class="btn" style="width:100px; background:#555" onclick="closeUI()">RETREAT</button>
         </div>
     </div>
 
     <div class="footer">
-        <div class="controls">
+        <div class="music-bar">
             <div id="yt-player"></div>
-            <span style="color:white; font-size:12px; font-weight:bold;">LOFI DEITY</span>
-            <input type="range" min="0" max="100" value="50" oninput="setVol(this.value)">
+            <div style="color:white; font-size: 10px; font-weight: bold;">HOLLOW PURPLE - LOFI DEITY</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px;">🔈</span>
+                <input type="range" min="0" max="100" value="50" oninput="setVol(this.value)">
+                <span style="font-size:12px;">🔊</span>
+            </div>
         </div>
     </div>
 
 <script>
+    // --- YOUTUBE API ---
     let player;
-    const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
     function onYouTubeIframeAPIReady() {
@@ -140,44 +161,35 @@
     }
     function setVol(v) { if(player) player.setVolume(v); }
 
-    let s = JSON.parse(localStorage.getItem('Sakura_RPG_Final')) || { p: 0, tree: 1, zen: 0, box: [] };
+    // --- GAME STATE ---
+    let s = JSON.parse(localStorage.getItem('Sakura_App_Final')) || {
+        p: 0, tree: 1, zen: 0
+    };
 
     function sync() {
         document.getElementById('p-display').textContent = Math.floor(s.p).toLocaleString() + " 🌸";
         document.getElementById('lv-display').textContent = s.tree;
+        
         const core = document.getElementById('tree-core');
         const lv = Math.min(s.tree, 100);
-        core.className = 'trunk'; core.style.height = (25 + lv * 1.5) + 'px'; core.style.width = (12 + lv / 6) + 'px';
-        if(s.tree > 5) core.innerHTML = `<div class="leaves" style="width:${50+lv*2.5}px; height:${40+lv*2}px; top:-${20+lv}px; left:-${15+(lv/1.2)}px;"></div>`;
-        localStorage.setItem('Sakura_RPG_Final', JSON.stringify(s));
-    }
-
-    function drawSpirit() {
-        if(s.p < 500) return alert("More petals needed!");
-        s.p -= 500;
-        const r = Math.random() * 100;
-        let res = ""; let color = "";
-        if(r < 0.5) { res = "[GOD]"; color = "var(--rarity-god)"; }
-        else if(r < 2) { res = "[MYTHIC]"; color = "var(--rarity-mythic)"; }
-        else if(r < 7) { res = "[LEGENDARY]"; color = "#ff9900"; }
-        else if(r < 15) { res = "[UR]"; color = "var(--rarity-ur)"; }
-        else if(r < 35) { res = "[SSR]"; color = "cyan"; }
-        else { res = "[UNCOMMON]"; color = "white"; }
+        core.style.height = (25 + lv * 1.5) + 'px';
+        core.style.width = (12 + lv / 6) + 'px';
         
-        const display = document.getElementById('summon-result');
-        display.innerText = res + " SPIRIT UNLOCKED!";
-        display.style.color = color;
-        sync();
-    }
-
-    function battleStep(type) {
-        if(type === 'atk') { s.zen = Math.min(100, s.zen + 20); document.getElementById('zen-bar').innerText = s.zen; }
-        else {
-            if(s.zen < 100) return alert("Wait for Zen!");
-            s.p += 2500; s.zen = 0; document.getElementById('zen-bar').innerText = 0;
-            alert("ZEN ULTIMATE: HOLLOW PURPLE! Enemy Cleared. +2500 🌸"); sync();
+        if(s.tree > 5) {
+            core.innerHTML = `<div class="leaves" style="width:${50+lv*2.5}px; height:${40+lv*2}px; top:-${20+lv}px; left:-${15+(lv/1.2)}px;"></div>`;
         }
+        localStorage.setItem('Sakura_App_Final', JSON.stringify(s));
     }
 
-    function openMode(m) {
-        if(m === 'delivery') window.location.href
+    function nurture() {
+        if(s.p >= 1000 && s.tree < 100) { s.p -= 1000; s.tree++; sync(); }
+        else if(s.p < 1000) alert("Need 1,000 Petals!");
+    }
+
+    // --- SUMMON SYSTEM ---
+    function summon() {
+        if(s.p < 500) return alert("Summon costs 500 🌸");
+        s.p -= 500;
+        
+        const roll = Math.random() * 100;
+        const overlay = document.getElementById('
