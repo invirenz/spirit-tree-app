@@ -3,115 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | Lo-Fi Forest</title>
+    <title>Sakura Spirit | Fixed</title>
     <style>
         :root {
-            --ghibli-sky: #87ceeb;
             --sakura-pink: #ffb7c5;
             --ui-accent: #5a8a58;
             --trunk-brown: #5d4037;
         }
 
+        /* Fixed the blue background issue */
         body {
+            background: #8ec5fc; /* Solid fallback */
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
-            font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
+            width: 100vw;
             overflow: hidden;
-            position: relative;
         }
 
-        /* --- CLOUDS & PETALS --- */
-        .cloud {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 100px;
-            filter: blur(15px);
-            animation: moveClouds linear infinite;
-            z-index: 1;
-        }
-        .c1 { width: 200px; height: 60px; top: 10%; left: -250px; animation-duration: 60s; }
-        .c2 { width: 300px; height: 90px; top: 20%; left: -400px; animation-duration: 90s; }
-        
-        @keyframes moveClouds {
-            from { transform: translateX(0); }
-            to { transform: translateX(calc(100vw + 500px)); }
-        }
-
-        .petal {
-            position: absolute;
-            background: var(--sakura-pink);
-            border-radius: 150% 0 150% 150%;
-            pointer-events: none;
-            z-index: 5;
-            box-shadow: 0 0 5px white;
-        }
-
-        /* --- UI CONTAINER --- */
+        /* Force UI to the front */
         #ui-container {
+            position: relative;
+            z-index: 999; 
             text-align: center;
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.85); /* Made more solid for visibility */
             padding: 30px;
-            border-radius: 40px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-            width: 340px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 350px;
+            border: 2px solid white;
         }
 
         .stats { 
-            font-size: 1.1rem; 
+            font-size: 1.2rem; 
             font-weight: bold; 
-            color: white; 
             margin-bottom: 15px; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #444;
         }
 
-        /* --- EVOLVING CSS TREE --- */
+        /* --- THE TREE VISUAL --- */
         #spirit-stage {
-            height: 200px;
+            height: 150px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            margin-bottom: 25px;
-            position: relative;
+            margin: 20px 0;
         }
 
-        /* Stage 0: Seed */
-        .seed { 
-            width: 30px; height: 35px; background: #8d6e63; 
-            border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; 
-        }
-
-        /* Stage 1: Sprout (1-4 Shrines) */
-        .sprout { 
-            width: 12px; height: 60px; background: #aed581; position: relative; 
-            border-radius: 5px 5px 0 0;
-        }
-        .sprout::after { 
-            content: ''; width: 30px; height: 15px; background: #81c784; 
-            border-radius: 0 100% 0 100%; position: absolute; top: 15px; left: 8px; 
-        }
-        
-        /* Stage 2: Tree (5+ Shrines) */
-        .full-tree { 
-            width: 22px; height: 100px; background: var(--trunk-brown); 
-            position: relative; border-radius: 10px 10px 0 0;
-        }
+        .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; }
+        .sprout { width: 12px; height: 60px; background: #aed581; border-radius: 5px; position: relative; }
+        .full-tree { width: 22px; height: 80px; background: var(--trunk-brown); position: relative; }
         .canopy { 
-            width: 160px; height: 140px; background: var(--sakura-pink); 
-            border-radius: 50%; position: absolute; top: -110px; left: -69px; 
-            filter: blur(2px); box-shadow: 0 0 30px var(--sakura-pink);
-            animation: float 4s infinite ease-in-out; 
+            width: 140px; height: 120px; background: var(--sakura-pink); 
+            border-radius: 50%; position: absolute; top: -100px; left: -59px; 
+            filter: blur(1px); animation: float 4s infinite ease-in-out; 
         }
 
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* --- UI ELEMENTS --- */
-        .plant-
+        /* --- BUTTONS --- */
+        .plant-btn {
+            background: var(--ui-accent);
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        /* YouTube Container */
+        .radio-box {
+            border-radius: 15px;
+            overflow: hidden;
+            background: #eee;
+            height: 80px;
+        }
+
+        /* Petal Layer */
+        .petal {
+            position: absolute;
+            background: var(--sakura-pink);
+            border-radius: 150% 0 150% 150%;
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui-container">
+    <div class="stats">
+        🌸 PETALS: <span id="sap-count">0</span><br>
+        ⛩️ SHRINES: <span id="tree-count">0</span>
+    </div>
+
+    <div id="spirit-stage">
+        <div id="tree-visual"></div>
+    </div>
+
+    <button id="plant-btn" class="plant-btn">Nurture Forest (1,000 🌸)</button>
+
+    <div class="radio-box">
+        <iframe width="100%" height="80" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1" frameborder="0"></iframe>
+    </div>
+</div>
+
+<script>
+    // State management
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
+    
+    const sapLabel = document.getElementById('sap-count');
+    const treeLabel = document.getElementById('tree-count');
+    const treeVisual = document.getElementById('tree-visual');
+    const plantBtn = document.getElementById('plant-btn');
+
+    function updateTreeVisual() {
+        treeVisual.className = "";
+        treeVisual.innerHTML = "";
+        if (state.totalPlanted === 0) {
+            treeVisual.classList.add("seed");
+        } else if (state.totalPlanted < 5) {
+            treeVisual.classList.add("sprout");
+        } else {
+            treeVisual.classList.add("full-tree");
+            treeVisual.innerHTML = '<div class="canopy"></div>';
+        }
+    }
+
+    function updateUI() {
+        sapLabel.textContent = Math.floor(
