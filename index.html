@@ -166,7 +166,7 @@
 
     <div id="spirit-display">
         <div class="aura"></div>
-        <img id="tree-art" src="assets/orb-stage-1.png" alt="Sakura Spirit">
+        <img id="tree-art" src="public/assets/orb-stage-1.png" alt="Sakura Spirit">
     </div>
 
     <div class="music-player">
@@ -183,11 +183,12 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
 
+    // PATH UPDATED: public/assets/ for all tracks
     const playlist = [
-        { name: "After Light", src: "assets/after_light.mp3" },
-        { name: "Get Away", src: "assets/get_away.mp3" },
-        { name: "Half of Me", src: "assets/half_of_me.mp3" },
-        { name: "W.D.I.D.", src: "assets/wdid.mp3" }
+        { name: "After Light", src: "public/assets/after_light.mp3" },
+        { name: "Get Away", src: "public/assets/get_away.mp3" },
+        { name: "Half of Me", src: "public/assets/half_of_me.mp3" },
+        { name: "W.D.I.D.", src: "public/assets/wdid.mp3" }
     ];
 
     const playBtn = document.getElementById('play-btn');
@@ -233,7 +234,6 @@
     }
     setInterval(createPetal, 500);
 
-    // FIX: RESILIENT AUDIO LOADER
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     let currentSource;
@@ -244,17 +244,14 @@
         if (audioCtx.state === 'suspended') await audioCtx.resume();
 
         const track = playlist[currentTrackIndex];
-        trackLabel.textContent = "LOADING SPIRIT...";
+        trackLabel.textContent = "LOADING FROM PUBLIC...";
 
         try {
             const response = await fetch(track.src);
-            
-            // Check if file exists (Fixes "No supported source" error if 404)
-            if (!response.ok) throw new Error(`File not found: ${track.src}`);
+            if (!response.ok) throw new Error(`Could not find ${track.src}`);
             
             const arrayBuffer = await response.arrayBuffer();
             
-            // Decode with error handling
             audioCtx.decodeAudioData(arrayBuffer, (audioBuffer) => {
                 if (currentSource) currentSource.stop();
                 currentSource = audioCtx.createBufferSource();
@@ -266,13 +263,13 @@
                 isPlaying = true;
                 playBtn.textContent = "STOP RADIO";
             }, (err) => {
-                console.warn("High-quality decode failed, trying fallback...", err);
+                console.warn("Decode failed, using fallback", err);
                 useFallback(track);
             });
 
         } catch (e) {
-            console.error("Fetch error:", e);
-            trackLabel.textContent = "ERROR: FILE MISSING";
+            console.error("Path error:", e);
+            trackLabel.textContent = "CHECK PATH: " + track.src;
             isPlaying = false;
             playBtn.textContent = "START RADIO";
         }
@@ -281,11 +278,11 @@
     function useFallback(track) {
         fallbackAudio.src = track.src;
         fallbackAudio.play().then(() => {
-            trackLabel.textContent = "PLAYING (LITE): " + track.name;
+            trackLabel.textContent = "PLAYING: " + track.name;
             isPlaying = true;
             playBtn.textContent = "STOP RADIO";
         }).catch(err => {
-            trackLabel.textContent = "SOURCE NOT SUPPORTED";
+            trackLabel.textContent = "SOURCE ERROR";
             console.error(err);
         });
         fallbackAudio.onended = autoNext;
