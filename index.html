@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | RPG Hub</title>
+    <title>Sakura Spirit | Anime Hub</title>
     <style>
         :root {
             --sakura-pink: #ffb7c5;
             --ui-accent: #5a8a58;
             --rpg-red: #e74c3c;
-            --rpg-blue: #3498db;
+            --sky-blue: #8ec5fc;
         }
 
         body {
@@ -26,78 +26,234 @@
             position: relative;
         }
 
-        /* Navigation */
-        #nav-bar { position: absolute; top: 20px; display: flex; gap: 10px; z-index: 1000; }
-        .nav-btn { background: white; border: 1px solid #ddd; padding: 10px 15px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        /* --- NAVIGATION --- */
+        #nav-bar { position: absolute; top: 20px; display: flex; gap: 10px; z-index: 2000; }
+        .nav-btn { background: white; border: 2px solid #ddd; padding: 10px 15px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .nav-btn:hover { background: #f0f0f0; transform: translateY(-2px); }
 
-        /* Screen Management */
-        .screen { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; }
+        /* --- SCREEN MANAGEMENT --- */
+        .screen { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; position: absolute; }
         .active { display: flex; }
 
-        /* --- RPG BATTLE UI --- */
-        #rpg-container {
+        /* --- UNIVERSAL UI BOX --- */
+        .glass-panel {
             background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 20px;
-            width: 350px;
+            padding: 25px;
+            border-radius: 35px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 320px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.5);
         }
 
-        .battle-stage {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 150px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #eee;
-        }
+        /* --- FOREST VISUALS --- */
+        #spirit-stage { height: 140px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 15px; }
+        .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; }
+        .full-tree { width: 20px; height: 70px; background: #5d4037; position: relative; }
+        .canopy { width: 130px; height: 110px; background: var(--sakura-pink); border-radius: 50%; position: absolute; top: -90px; left: -55px; filter: blur(1px); }
 
-        .entity { font-size: 50px; position: relative; transition: 0.3s; }
-        .hp-bar { width: 100px; height: 10px; background: #ddd; border-radius: 5px; margin-top: 5px; overflow: hidden; }
-        .hp-fill { height: 100%; background: var(--ui-accent); width: 100%; transition: 0.3s; }
-        
-        .rpg-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .rpg-btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; }
-        .atk-btn { background: var(--rpg-red); }
-        .train-btn { background: var(--rpg-blue); }
+        /* --- DELIVERY GAME --- */
+        #game-canvas { position: relative; width: 100%; height: 100%; background: var(--sky-blue); overflow: hidden; cursor: pointer; }
+        #player { position: absolute; width: 50px; height: 50px; font-size: 40px; left: 50px; top: 50%; z-index: 10; pointer-events: none; }
+        .cloud { position: absolute; background: white; border-radius: 50px; filter: blur(5px); }
+        #game-ui { position: absolute; top: 80px; width: 100%; text-align: center; font-size: 3rem; color: white; font-weight: 900; pointer-events: none; z-index: 5; }
 
-        /* Forest UI */
-        #ui-container { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 40px; width: 300px; text-align: center; }
-        #spirit-stage { height: 150px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 20px; }
-        .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; }
-        .full-tree { width: 22px; height: 80px; background: #5d4037; position: relative; }
-        .canopy { width: 140px; height: 120px; background: var(--sakura-pink); border-radius: 50%; position: absolute; top: -100px; left: -59px; filter: blur(1px); }
+        /* --- RPG BATTLE --- */
+        .battle-area { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
+        .char { font-size: 45px; }
+        .hp-container { width: 100px; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .hp-bar { height: 100%; background: var(--ui-accent); width: 100%; transition: 0.3s; }
 
-        .log { font-size: 0.8rem; margin-top: 15px; height: 40px; color: #555; }
-        .radio-footer { position: absolute; bottom: 10px; width: 200px; height: 40px; opacity: 0.3; border-radius: 10px; overflow: hidden; }
+        /* --- OVERLAYS --- */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; display: none; }
+
+        /* --- FOOTER RADIO --- */
+        .radio-wrap { position: absolute; bottom: 15px; width: 220px; height: 45px; opacity: 0.5; border-radius: 12px; overflow: hidden; z-index: 2000; border: 1px solid white; }
+
+        button.action-btn { background: var(--ui-accent); color: white; border: none; padding: 12px; border-radius: 20px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="nav-bar">
     <button class="nav-btn" onclick="showScreen('forest-screen')">🌸 Forest</button>
-    <button class="nav-btn" onclick="showScreen('rpg-screen')">⚔️ Battle</button>
+    <button class="nav-btn" onclick="showScreen('delivery-screen')">🧹 Delivery</button>
+    <button class="nav-btn" onclick="showScreen('rpg-screen')">⚔️ RPG</button>
 </div>
 
 <div id="forest-screen" class="screen active">
-    <div id="ui-container">
-        <div class="stats">
-            🌸 PETALS: <span id="p-count">0</span><br>
-            ⛩️ SHRINES: <span id="s-count">0</span>
+    <div class="glass-panel">
+        <div style="font-weight: bold; margin-bottom: 10px;">
+            🌸 PETALS: <span id="f-petals">0</span><br>
+            ⛩️ LEVEL: <span id="f-level">0</span>
         </div>
         <div id="spirit-stage"><div id="tree-vis"></div></div>
-        <button class="nav-btn" onclick="nurture()" style="width: 100%; background: var(--ui-accent); color: white;">Nurture Tree (1,000 🌸)</button>
+        <button class="action-btn" onclick="nurture()">Nurture Tree (1,000 🌸)</button>
+    </div>
+</div>
+
+<div id="delivery-screen" class="screen">
+    <div id="game-canvas" onmousedown="jump()" ontouchstart="jump()">
+        <div id="game-ui">0</div>
+        <div id="player">🧹</div>
+        <div id="delivery-start" class="overlay" style="display: flex;">
+            <h2>Bakery Delivery</h2>
+            <p>Tap to Fly. Avoid the clouds!</p>
+            <button class="nav-btn" onclick="startGame()">START</button>
+        </div>
     </div>
 </div>
 
 <div id="rpg-screen" class="screen">
-    <div id="rpg-container">
-        <div class="stats">
-            Level <span id="p-lvl">1</span> Warrior | 🌸 <span id="rpg-p-count">0</span>
+    <div class="glass-panel">
+        <h3>Spirit Warrior - Lv.<span id="rpg-lvl">1</span></h3>
+        <div class="battle-area">
+            <div><div class="char">🐱</div><div class="hp-container"><div id="p-hp" class="hp-bar"></div></div></div>
+            <div style="font-weight:bold; color:#ccc;">VS</div>
+            <div><div class="char">👹</div><div class="hp-container"><div id="b-hp" class="hp-bar" style="background:red;"></div></div></div>
         </div>
+        <button class="action-btn" style="background:var(--rpg-red);" onclick="fight()">ATTACK</button>
+        <button class="action-btn" style="background:#3498db;" onclick="train()">TRAIN (500 🌸)</button>
+        <div id="battle-log" style="font-size: 0.8rem; margin-top: 10px;">Ready for battle!</div>
+    </div>
+</div>
+
+<div id="die-overlay" class="overlay">
+    <h1 id="die-title">Oops!</h1>
+    <p id="die-msg">Delivery failed.</p>
+    <button class="nav-btn" onclick="showScreen('forest-screen')">Back to Hub</button>
+</div>
+
+<div class="radio-wrap">
+    <iframe width="100%" height="45" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1&modestbranding=1" frameborder="0" allow="autoplay"></iframe>
+</div>
+
+<script>
+    // --- DATABASE ---
+    let state = JSON.parse(localStorage.getItem('animeHubData')) || {
+        petals: 0,
+        treeLv: 0,
+        rpgLv: 1,
+        pAtk: 15,
+        pHp: 100,
+        pMaxHp: 100
+    };
+
+    let boss = { hp: 500, maxHp: 500, atk: 12 };
+
+    // --- SCREEN NAVIGATION ---
+    function showScreen(id) {
+        gameRunning = false;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('die-overlay').style.display = 'none';
+        if(id === 'delivery-screen') document.getElementById('delivery-start').style.display = 'flex';
+        sync();
+    }
+
+    // --- CORE LOGIC ---
+    function sync() {
+        // Update Labels
+        document.getElementById('f-petals').textContent = Math.floor(state.petals).toLocaleString();
+        document.getElementById('f-level').textContent = state.treeLv;
+        document.getElementById('rpg-lvl').textContent = state.rpgLv;
         
-        <div class="battle-stage">
-            <div id="player-char">
-                <div class="entity">🐱</div>
-                <div class="hp-bar">
+        // Update Bars
+        document.getElementById('p-hp').style.width = (state.pHp/state.pMaxHp*100) + '%';
+        document.getElementById('b-hp').style.width = (boss.hp/boss.maxHp*100) + '%';
+
+        // Update Tree
+        const tv = document.getElementById('tree-vis');
+        tv.className = ""; tv.innerHTML = "";
+        if (state.treeLv === 0) tv.classList.add('seed');
+        else { tv.classList.add('full-tree'); tv.innerHTML = '<div class="canopy"></div>'; }
+
+        localStorage.setItem('animeHubData', JSON.stringify(state));
+    }
+
+    function nurture() {
+        if (state.petals >= 1000) { state.petals -= 1000; state.treeLv++; sync(); }
+    }
+
+    // --- DELIVERY GAME ---
+    let gameRunning = false, py = 300, pv = 0, g = 0.5, score = 0, clouds = [];
+    function startGame() {
+        document.getElementById('delivery-start').style.display = 'none';
+        py = 300; pv = 0; score = 0;
+        clouds.forEach(c => c.remove()); clouds = [];
+        document.getElementById('game-ui').textContent = "0";
+        gameRunning = true;
+    }
+    function jump() { if(gameRunning) pv = -8; }
+
+    function runDelivery() {
+        if(!gameRunning) return;
+        pv += g; py += pv;
+        document.getElementById('player').style.top = py + 'px';
+        if(py > window.innerHeight || py < -50) die("The wind caught you!");
+
+        if(Math.random() < 0.02) {
+            const c = document.createElement('div');
+            c.className = 'cloud';
+            c.style.width = '150px'; c.style.height = '60px';
+            c.style.right = '-200px'; c.style.top = Math.random() * 80 + '%';
+            document.getElementById('game-canvas').appendChild(c);
+            clouds.push(c);
+        }
+
+        clouds.forEach((c, i) => {
+            let r = parseInt(c.style.right) + 6;
+            c.style.right = r + 'px';
+            let rect = c.getBoundingClientRect(), pRect = document.getElementById('player').getBoundingClientRect();
+            if(pRect.left < rect.right && pRect.right > rect.left && pRect.top < rect.bottom && pRect.bottom > rect.top) die("Watch out for clouds!");
+            if(r > window.innerWidth + 200) {
+                c.remove(); clouds.splice(i,1); score += 10;
+                document.getElementById('game-ui').textContent = score;
+            }
+        });
+    }
+
+    function die(msg) {
+        gameRunning = false;
+        state.petals += score;
+        document.getElementById('die-title').textContent = "Result";
+        document.getElementById('die-msg').textContent = `${msg} You earned ${score} 🌸`;
+        document.getElementById('die-overlay').style.display = 'flex';
+        sync();
+    }
+
+    // --- RPG BATTLE ---
+    function train() {
+        if(state.petals >= 500) {
+            state.petals -= 500; state.rpgLv++; state.pMaxHp += 25; state.pHp = state.pMaxHp; state.pAtk += 8;
+            document.getElementById('battle-log').textContent = "Training complete! Lv Up!";
+            sync();
+        }
+    }
+    function fight() {
+        if(state.pHp <= 0) { document.getElementById('battle-log').textContent = "Too weak! Train to heal."; return; }
+        let pDmg = Math.floor(Math.random() * state.pAtk) + 5;
+        boss.hp -= pDmg;
+        if(boss.hp <= 0) {
+            state.petals += 5000; boss.maxHp += 300; boss.hp = boss.maxHp;
+            document.getElementById('battle-log').textContent = "BOSS DEFEATED! Found 5,000 🌸";
+        } else {
+            let bDmg = Math.floor(Math.random() * boss.atk);
+            state.pHp -= bDmg;
+            document.getElementById('battle-log').textContent = `Hit for ${pDmg}! Boss hit back for ${bDmg}!`;
+        }
+        sync();
+    }
+
+    // --- LOOPS ---
+    function mainLoop() {
+        runDelivery();
+        requestAnimationFrame(mainLoop);
+    }
+    setInterval(() => { if(!gameRunning) state.petals += 1; sync(); }, 1000);
+
+    sync();
+    mainLoop();
+</script>
+</body>
+</html>
