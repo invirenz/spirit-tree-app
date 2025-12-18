@@ -10,13 +10,14 @@
             --ghibli-sky: #87ceeb;
             --ghibli-cloud: #ffffff;
             --sakura-pink: #ffb7c5;
+            --sakura-dark: #ff91a4;
             --ui-accent: #5a8a58;
         }
 
         body {
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -53,13 +54,16 @@
             border-radius: 30px;
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .stats {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #ffffff;
+            letter-spacing: 1px;
             margin-bottom: 20px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         #spirit-display {
@@ -72,8 +76,10 @@
 
         #tree-art {
             width: 260px;
+            height: auto;
             z-index: 2;
             filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            pointer-events: none;
         }
 
         .aura {
@@ -82,7 +88,9 @@
             height: 300px;
             background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
             border-radius: 50%;
+            z-index: 1;
             animation: pulseAura 5s infinite alternate ease-in-out;
+            pointer-events: none;
         }
 
         .petal {
@@ -91,8 +99,10 @@
             width: 12px;
             height: 8px;
             border-radius: 50% 0 50% 50%;
+            opacity: 0;
             pointer-events: none;
             z-index: 5;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
         }
 
         .music-player {
@@ -111,9 +121,20 @@
             border-radius: 40px;
             cursor: pointer;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        #track-name { font-size: 0.8rem; margin-top: 12px; color: #444; }
+        .play-btn:active { transform: scale(0.95); }
+
+        #track-name {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 12px;
+            font-weight: 500;
+        }
 
         @keyframes pulseAura {
             0% { opacity: 0.3; transform: scale(0.8); }
@@ -123,13 +144,20 @@
 </head>
 <body>
 
-<div class="cloud" style="top: 15%"></div>
+<div class="cloud" style="top: 10%; animation-duration: 80s;"></div>
+<div class="cloud" style="top: 25%; animation-duration: 120s; width: 300px;"></div>
+
 <div id="ui-container">
-    <div class="stats">🌸 PETALS: <span id="sap-count">0</span></div>
+    <div class="stats">
+        🌸 PETALS: <span id="sap-count">0</span><br>
+        SHRINES: <span id="tree-count">0</span>
+    </div>
+
     <div id="spirit-display">
         <div class="aura"></div>
-        <img id="tree-art" src="/assets/orb-stage-1.png" alt="Tree">
+        <img id="tree-art" src="/assets/orb-stage-1.png" alt="Sakura Spirit">
     </div>
+
     <div class="music-player">
         <button id="play-btn" class="play-btn">START RADIO</button>
         <p id="track-name">READY</p>
@@ -137,11 +165,12 @@
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0 };
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
+    let lastTick = Date.now(); 
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // Vercel paths start with /assets/
+    // PATHS: Using the absolute /assets/ as confirmed in your Vercel logs
     const playlist = [
         { name: "After Light", src: "/assets/after_light.mp3" },
         { name: "Get Away", src: "/assets/get_away.mp3" },
@@ -152,15 +181,43 @@
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
+    const treeArt = document.getElementById('tree-art');
 
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap).toLocaleString();
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    setInterval(() => { state.sap += 1; updateUI(); }, 1000);
+    function gameLoop() {
+        const now = Date.now();
+        if (now - lastTick >= 1000) {
+            state.sap += 1;
+            lastTick = now;
+            updateUI();
+        }
+        const float = Math.sin(now / 2000) * 15;
+        if(treeArt) treeArt.style.transform = `translateY(${float}px)`;
+        requestAnimationFrame(gameLoop);
+    }
 
-    let audioCtx, currentSource;
+    function createPetal() {
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        petal.style.left = (Math.random() * 100) + 'vw';
+        petal.style.top = '-20px';
+        document.body.appendChild(petal);
+
+        petal.animate([
+            { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
+            { opacity: 0.8, offset: 0.1 },
+            { transform: `translate(${(Math.random() * 200)}px, 110vh) rotate(720deg)`, opacity: 0 }
+        ], { duration: 8000 }).onfinish = () => petal.remove();
+    }
+    setInterval(createPetal, 600);
+
+    // ROBUST AUDIO LOADER
+    let audioCtx;
+    let currentSource;
 
     async function playTrack() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -171,7 +228,8 @@
 
         try {
             const response = await fetch(track.src);
-            if (!response.ok) throw new Error("404 Not Found");
+            if (!response.ok) throw new Error("404");
+            
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
@@ -179,19 +237,27 @@
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = audioBuffer;
             currentSource.connect(audioCtx.destination);
+            currentSource.onended = () => { if(isPlaying) autoNext(); };
             currentSource.start(0);
-            
+
             trackLabel.textContent = "NOW PLAYING: " + track.name;
             isPlaying = true;
             playBtn.textContent = "STOP RADIO";
         } catch (e) {
-            trackLabel.textContent = "FILE MISSING: " + track.src;
+            trackLabel.textContent = "ERROR LOADING: " + track.name;
+            console.error(e);
         }
     }
 
+    function autoNext() {
+        currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+        playTrack();
+    }
+
     playBtn.onclick = () => {
-        if (!isPlaying) playTrack();
-        else {
+        if (!isPlaying) {
+            playTrack();
+        } else {
             if (currentSource) currentSource.stop();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
@@ -200,6 +266,7 @@
     };
 
     updateUI();
+    gameLoop();
 </script>
 </body>
 </html>
