@@ -9,8 +9,8 @@ export default async function handler(req, res) {
   // IMPORTANT: Ensure you have added "DH_ENTERPRISE_ID" to Vercel too
   const ENTERPRISE_ID = process.env.DH_ENTERPRISE_ID || "Invirenz-Spirit-Tree";
 
-  // 3. Project ID (44112222 = One Tree Planted - USA)
-  const PROJECT_ID = "44112222"; 
+  // 3. Project ID (44116666 = One Tree Planted - Global Reforestation)
+  const PROJECT_ID = "44116666";
 
   try {
     // 4. Send Request to Digital Humani
@@ -18,12 +18,12 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': API_KEY
+        'X-API-KEY': 8oMK0NrQHLy627M1OG59xE04x2Wc7Lht6LIZdv6PcER0KJBO
       },
       body: JSON.stringify({
         "treeCount": 1,
-        "enterpriseId": ENTERPRISE_ID, 
-        "projectId": PROJECT_ID,
+        "enterpriseId": 7aaad902, 
+        "projectId": 44116666,
         "user": "fan@spirittree.app" 
       })
     });
