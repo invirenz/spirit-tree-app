@@ -82,6 +82,7 @@
             letter-spacing: 2px;
             transition: 0.2s;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            pointer-events: auto;
         }
 
         .plant-btn {
@@ -93,6 +94,7 @@
             cursor: pointer;
             margin-top: 25px;
             font-size: 0.9rem;
+            pointer-events: auto;
         }
 
         #track-name {
@@ -131,9 +133,9 @@
 </div>
 
 <script>
-    // 1. STATE MANAGEMENT
+    // 1. FIXED STATE & TIMING
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
-    let lastTick = Date.now(); // We match your snippet's logic here
+    let lastTick = Date.now(); 
     let isPlaying = false;
     let currentTrackIndex = 0;
 
@@ -144,7 +146,7 @@
         { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
-    // 2. WEB AUDIO API SETUP
+    // 2. AUDIO SETUP
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     let currentSource;
@@ -161,18 +163,16 @@
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    // 3. GAME LOOP (Corrected logic from your snippet)
+    // 3. GAME LOOP (SAP ACCUMULATION)
     function gameLoop() {
         const now = Date.now();
         
-        // Match the sap accumulation logic
         if (now - lastTick >= 1000) {
             state.sap += 1;
             lastTick = now;
             updateUI();
         }
 
-        // Animation logic
         const float = Math.sin(now / 1500) * 10;
         const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.04;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
@@ -180,7 +180,7 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // 4. AUDIO DECODING LOGIC
+    // 4. AUDIO DECODING
     async function playCurrentTrack() {
         if (!audioCtx) audioCtx = new AudioContext();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -227,7 +227,6 @@
         }
     };
 
-    // 5. TREE PLANTING
     document.getElementById('plant-btn').onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
@@ -238,12 +237,8 @@
         }
     }
 
-    function createLeaf() {
-        const leaf = document.createElement('div');
-        leaf.className = 'leaf';
-        leaf.style.left = (Math.random() * 100) + 'vw';
-        const size = (Math.random() * 5 + 2) + 'px';
-        leaf.style.width = size;
-        leaf.style.height = size;
-        document.body.appendChild(leaf);
-        leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], { duration: 6000 }).onfinish = ()
+    updateUI();
+    requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
