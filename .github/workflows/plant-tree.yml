@@ -1,0 +1,20 @@
+name: Digital Humani Bridge
+on:
+  repository_dispatch:
+    types: [plant_tree]
+
+jobs:
+  plant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Digital Humani API
+        run: |
+          curl -X POST "https://api.digitalhumani.com/tree" \
+          -H "X-API-KEY: ${{ 8oMK0NrQHLy627M1OG59xE04x2Wc7Lht6LIZdv6PcER0KJBO }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "treeCount": 1,
+            "enterpriseId": "${{ 7aaad902 }}",
+            "projectId": "44112222",
+            "user": "Spirit Tree Player"
+          }'
