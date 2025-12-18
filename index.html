@@ -11,11 +11,10 @@
             --ghibli-cloud: #ffffff;
             --sakura-pink: #ffb7c5;
             --sakura-dark: #ff91a4;
-            --ui-accent: #5a8a58; /* Soft forest green */
+            --ui-accent: #5a8a58;
         }
 
         body {
-            /* Ghibli Daylight Sky Gradient */
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
             font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
@@ -29,7 +28,6 @@
             touch-action: manipulation;
         }
 
-        /* Animated Clouds */
         .cloud {
             position: absolute;
             background: var(--ghibli-cloud);
@@ -80,7 +78,6 @@
             width: 260px;
             height: auto;
             z-index: 2;
-            /* Soft shadow for Ghibli hand-drawn feel */
             filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
             pointer-events: none;
         }
@@ -96,7 +93,6 @@
             pointer-events: none;
         }
 
-        /* SAKURA PETAL PARTICLES */
         .petal {
             position: absolute;
             background: var(--sakura-pink);
@@ -131,10 +127,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .play-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
+        .play-btn:active { transform: scale(0.95); }
 
         .plant-btn {
             background: var(--ui-accent);
@@ -145,7 +138,6 @@
             cursor: pointer;
             margin-top: 20px;
             font-size: 0.85rem;
-            transition: opacity 0.2s;
         }
 
         #track-name {
@@ -165,12 +157,11 @@
 
 <div class="cloud" style="top: 10%; animation-duration: 80s;"></div>
 <div class="cloud" style="top: 25%; animation-duration: 120s; width: 300px;"></div>
-<div class="cloud" style="top: 50%; animation-duration: 90s; opacity: 0.4;"></div>
 
 <div id="ui-container">
     <div class="stats">
         🌸 PETALS: <span id="sap-count">0</span><br>
-        SHRINES PLANTED: <span id="tree-count">0</span>
+        SHRINES: <span id="tree-count">0</span>
     </div>
 
     <div id="spirit-display">
@@ -187,7 +178,6 @@
 </div>
 
 <script>
-    // 1. STATE
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastTick = Date.now(); 
     let isPlaying = false;
@@ -200,14 +190,12 @@
         { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
-    // 2. DOM ELEMENTS
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
     const treeLabel = document.getElementById('tree-count');
     const treeArt = document.getElementById('tree-art');
 
-    // 3. UI & GAME LOOP
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap).toLocaleString();
         treeLabel.textContent = state.totalPlanted;
@@ -221,47 +209,31 @@
             lastTick = now;
             updateUI();
         }
-        
-        // Soft floating animation
         const float = Math.sin(now / 2000) * 15;
         const pulse = 1 + Math.sin(now / (isPlaying ? 800 : 3000)) * 0.03;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
-        
         requestAnimationFrame(gameLoop);
     }
 
-    // 4. GHIBLI SAKURA PETAL SYSTEM
     function createPetal() {
         const petal = document.createElement('div');
         petal.className = 'petal';
-        
-        const startX = Math.random() * 120 - 20; // Start slightly off-screen
-        petal.style.left = startX + 'vw';
+        petal.style.left = (Math.random() * 120 - 20) + 'vw';
         petal.style.top = '-20px';
-        
         const scale = Math.random() * 0.5 + 0.5;
         const rotation = Math.random() * 360;
         petal.style.transform = `rotate(${rotation}deg) scale(${scale})`;
-        
         document.body.appendChild(petal);
-
-        const duration = Math.random() * 8000 + 7000;
-        const drift = (Math.random() * 300) + 100; // Drift across the screen
 
         petal.animate([
             { transform: `translate(0, 0) rotate(${rotation}deg) scale(${scale})`, opacity: 0 },
             { opacity: 0.8, offset: 0.1 },
-            { transform: `translate(${drift}px, 110vh) rotate(${rotation + 720}deg) scale(${scale})`, opacity: 0 }
-        ], {
-            duration: duration,
-            easing: 'linear'
-        }).onfinish = () => petal.remove();
+            { transform: `translate(${(Math.random() * 300) + 100}px, 110vh) rotate(${rotation + 720}deg) scale(${scale})`, opacity: 0 }
+        ], { duration: Math.random() * 8000 + 7000, easing: 'linear' }).onfinish = () => petal.remove();
     }
-    
-    // Create petals more frequently for a "lush" feel
-    setInterval(createPetal, 400);
+    setInterval(createPetal, 500);
 
-    // 5. AUDIO LOGIC
+    // FIX: RESILIENT AUDIO LOADER
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     let currentSource;
@@ -271,30 +243,52 @@
         if (!audioCtx) audioCtx = new AudioContext();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-        trackLabel.textContent = "TUNING SPIRIT...";
+        const track = playlist[currentTrackIndex];
+        trackLabel.textContent = "LOADING SPIRIT...";
 
         try {
-            const response = await fetch(playlist[currentTrackIndex].src);
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            const response = await fetch(track.src);
             
-            if (currentSource) currentSource.stop();
-            currentSource = audioCtx.createBufferSource();
-            currentSource.buffer = audioBuffer;
-            currentSource.connect(audioCtx.destination);
-            currentSource.onended = () => { if(isPlaying) autoNext(); };
-            currentSource.start(0);
+            // Check if file exists (Fixes "No supported source" error if 404)
+            if (!response.ok) throw new Error(`File not found: ${track.src}`);
+            
+            const arrayBuffer = await response.arrayBuffer();
+            
+            // Decode with error handling
+            audioCtx.decodeAudioData(arrayBuffer, (audioBuffer) => {
+                if (currentSource) currentSource.stop();
+                currentSource = audioCtx.createBufferSource();
+                currentSource.buffer = audioBuffer;
+                currentSource.connect(audioCtx.destination);
+                currentSource.onended = () => { if(isPlaying) autoNext(); };
+                currentSource.start(0);
+                trackLabel.textContent = "NOW PLAYING: " + track.name;
+                isPlaying = true;
+                playBtn.textContent = "STOP RADIO";
+            }, (err) => {
+                console.warn("High-quality decode failed, trying fallback...", err);
+                useFallback(track);
+            });
 
-            trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
-            isPlaying = true;
         } catch (e) {
-            fallbackAudio.src = playlist[currentTrackIndex].src;
-            fallbackAudio.play();
-            fallbackAudio.onended = autoNext;
-            trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
-            isPlaying = true;
+            console.error("Fetch error:", e);
+            trackLabel.textContent = "ERROR: FILE MISSING";
+            isPlaying = false;
+            playBtn.textContent = "START RADIO";
         }
-        playBtn.textContent = "STOP RADIO";
+    }
+
+    function useFallback(track) {
+        fallbackAudio.src = track.src;
+        fallbackAudio.play().then(() => {
+            trackLabel.textContent = "PLAYING (LITE): " + track.name;
+            isPlaying = true;
+            playBtn.textContent = "STOP RADIO";
+        }).catch(err => {
+            trackLabel.textContent = "SOURCE NOT SUPPORTED";
+            console.error(err);
+        });
+        fallbackAudio.onended = autoNext;
     }
 
     function autoNext() {
@@ -306,7 +300,7 @@
         if (!isPlaying) {
             playTrack();
         } else {
-            if (currentSource) currentSource.stop();
+            if (currentSource) { try { currentSource.stop(); } catch(e){} }
             fallbackAudio.pause();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
@@ -314,19 +308,18 @@
         }
     };
 
-    // 6. BUTTON LOGIC
     document.getElementById('plant-btn').onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
             updateUI();
         } else {
-            alert("Need 1,000 more petals!");
+            alert("Need more petals!");
         }
     };
 
     updateUI();
-    requestAnimationFrame(gameLoop);
+    gameLoop();
 </script>
 </body>
 </html>
