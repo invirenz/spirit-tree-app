@@ -144,11 +144,11 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // --- CRITICAL FIX: Filenames must match exactly including spaces ---
+    // --- RE-CODED TO USE CLEAN UNDERSCORE PATHS ---
     const playlist = [
-        { name: "After Light", src: "assets/After Light mastered.mp3" }, 
-        { name: "Get Away", src: "assets/Get Away mastered.mp3" },
-        { name: "Half of Me", src: "assets/Half of Me mastered.mp3" },
+        { name: "After Light", src: "assets/After_Light_mastered.mp3" }, 
+        { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
+        { name: "Half of Me", src: "assets/Half_of_Me_mastered.mp3" },
         { name: "W.D.I.D.", src: "assets/WDID.mp3" }
     ];
 
@@ -179,9 +179,10 @@
     }
 
     async function toggleRadio() {
-        // If first play, set the source
+        // Force the source only if it's empty
         if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
             audio.src = playlist[currentTrackIndex].src;
+            audio.load();
         }
 
         if (audio.paused) {
@@ -192,7 +193,9 @@
                 trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
                 trackLabel.style.color = "#00ffff";
             } catch (e) {
-                trackLabel.textContent = "TAP AGAIN TO SYNC";
+                // If the browser blocks it, we tell the user to click again.
+                trackLabel.textContent = "INTERACTION BLOCKED: TAP AGAIN";
+                console.error("Playback failed", e);
             }
         } else {
             audio.pause();
@@ -211,9 +214,9 @@
         trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
     };
 
-    // Error catching to show us if the filename is still wrong
+    // If there is a file error, we will see it here
     audio.onerror = () => {
-        trackLabel.textContent = "ERROR: Cannot find " + playlist[currentTrackIndex].src;
+        trackLabel.textContent = "FILE NOT FOUND: " + playlist[currentTrackIndex].src;
         trackLabel.style.color = "#ff5555";
     };
 
