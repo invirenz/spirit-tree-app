@@ -3,114 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spirit Tree Radio</title>
+    <title>Spirit Tree | Indie Radio</title>
     <style>
         body {
-            background-color: #1a1a1a;
-            color: #00ff00;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #050a05;
+            background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
+            color: #e0ffe0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
-        .container {
+
+        #ui-container {
+            z-index: 10;
             text-align: center;
-            border: 2px solid #00ff00;
-            padding: 40px;
-            border-radius: 15px;
-            background: #000;
-            box-shadow: 0 0 20px #00ff00;
         }
-        button {
-            background: #00ff00;
-            color: #000;
-            border: none;
-            padding: 15px 30px;
+
+        .stats {
             font-size: 1.2rem;
-            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+        }
+
+        #spirit-display {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        /* The Tree/Orb Image */
+        #tree-art {
+            width: 240px;
+            height: auto;
+            z-index: 2;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
+            transition: transform 0.3s ease;
+        }
+
+        /* The Glowing Background Pulse */
+        .aura {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulseAura 4s infinite alternate ease-in-out;
+        }
+
+        .music-player {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            min-width: 280px;
+        }
+
+        .play-btn {
+            background: #00ffff;
+            border: none;
+            color: #050a05;
+            padding: 12px 30px;
+            border-radius: 25px;
             cursor: pointer;
-            border-radius: 5px;
-            margin-top: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
         }
-        button:hover {
-            background: #00cc00;
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
         }
-        #track-info {
-            margin-top: 20px;
-            font-size: 1rem;
+
+        .plant-btn {
+            background: none;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .plant-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Falling Leaf Particles */
+        .leaf {
+            position: absolute;
+            background: #00ffff;
+            border-radius: 50%;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        @keyframes pulseAura {
+            0% { opacity: 0.2; transform: scale(0.9); }
+            100% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        #track-name {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 15px;
+            height: 1.2em;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>SPIRIT TREE RADIO</h1>
-    <div id="track-info">READY TO PLAY</div>
-    <button id="play-btn">START RADIO</button>
+<div id="ui-container">
+    <div class="stats">
+        SAP: <span id="sap-count">0</span><br>
+        TREES PLANTED: <span id="tree-count">0</span>
+    </div>
+
+    <div id="spirit-display">
+        <div class="aura"></div>
+        <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
+    </div>
+
+    <div class="music-player">
+        <button id="play-btn" class="play-btn">Play Radio</button>
+        <p id="track-name">Radio Offline</p>
+    </div>
+
+    <button id="plant-btn" class="plant-btn">Plant USA Tree (1,000 Sap)</button>
 </div>
 
 <script>
-    // 1. SETUP PLAYLIST
-    // Ensure these files exist in your /assets folder on GitHub/Vercel
-    const playlist = [
-        { name: "After Light", src: "assets/After_Light_mastered.mp3" },
-        { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
-        { name: "Half of Me", src: "assets/Half_of_Me_mastered.mp3" },
-        { name: "W.D.I.D.", src: "assets/WDID.mp3" }
-    ];
-
-    let currentTrackIndex = 0;
-    let isPlaying = false;
-
-    // 2. CREATE AUDIO ELEMENT
-    const audio = new Audio();
-    const playBtn = document.getElementById('play-btn');
-    const trackLabel = document.getElementById('track-info');
-
-    // 3. TOGGLE PLAY/PAUSE FUNCTION
-    async function toggleMusic() {
-        // Load first track if none is loaded
-        if (!audio.src || audio.src === "") {
-            loadTrack(currentTrackIndex);
-        }
-
-        try {
-            if (!isPlaying) {
-                await audio.play();
-                isPlaying = true;
-                playBtn.textContent = "PAUSE RADIO";
-                trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
-            } else {
-                audio.pause();
-                isPlaying = false;
-                playBtn.textContent = "RESUME RADIO";
-            }
-        } catch (err) {
-            console.error("Playback failed:", err);
-            trackLabel.textContent = "ERROR: CLICK AGAIN TO START";
-        }
-    }
-
-    // 4. LOAD SPECIFIC TRACK
-    function loadTrack(index) {
-        audio.src = playlist[index].src;
-        audio.load();
-    }
-
-    // 5. AUTO-PLAY NEXT TRACK
-    audio.onended = () => {
-        currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-        loadTrack(currentTrackIndex);
-        audio.play().catch(e => console.log("Auto-next blocked"));
-        trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
+    // --- 1. DATA & PLAYLIST ---
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || {
+        sap: 0,
+        totalPlanted: 0,
+        lastTick: Date.now()
     };
-
-    // 6. EVENT LISTENER
-    playBtn.addEventListener('click', toggleMusic);
-
-</script>
-</body>
-</html>
