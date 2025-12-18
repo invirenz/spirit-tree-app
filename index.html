@@ -3,150 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | Lofi Deity Hub</title>
+    <title>Spirit Tree x Digital Humani</title>
     <style>
         :root {
             --sakura: #ffb7c5;
             --green: #5a8a58;
-            --rarity-mythic: #ff4500;
             --rarity-god: #ffcc00;
-            --rarity-ur: #ff00ff;
-            --rarity-ssr: #00ffff;
+            --rarity-mythic: #ff4500;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
-            overflow: hidden; color: #333;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #a1c4fd 0%, #c2e9fb 100%);
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
         }
 
-        /* PETAL ANIMATION */
-        .petal {
-            position: absolute; background: var(--sakura);
-            border-radius: 150% 0 150% 150%; z-index: 1; pointer-events: none;
+        /* START OVERLAY (Required for Audio) */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
         }
 
-        /* MAIN PANEL */
         .panel {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 25px; border-radius: 40px;
             width: 320px; text-align: center; z-index: 10;
             box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            border: 2px solid white; backdrop-filter: blur(10px);
+            border: 2px solid white;
         }
 
-        /* TREE SYSTEM */
-        #tree-stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin: 15px; position: relative; }
-        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* TREE STAGE */
+        #tree-stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin: 15px; }
+        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s ease; }
         .leaves { 
             position: absolute; background: var(--sakura); 
             border-radius: 50%; filter: blur(2px); transition: 0.8s ease;
             box-shadow: 0 0 20px rgba(255, 183, 197, 0.6);
         }
 
-        /* UI ELEMENTS */
-        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .card {
-            background: white; border: 2px solid #eee; padding: 12px;
-            border-radius: 20px; cursor: pointer; font-weight: bold;
-            transition: 0.2s; font-size: 13px;
-        }
-        .card:hover { transform: translateY(-3px); border-color: var(--sakura); }
-
+        .stats-row { display: flex; justify-content: space-around; margin-bottom: 10px; font-weight: bold; }
+        
         .btn {
             background: var(--green); color: white; border: none;
             padding: 12px; border-radius: 50px; width: 100%;
             font-weight: bold; cursor: pointer; margin-top: 10px;
-            box-shadow: 0 4px 0 #3e603d;
+            box-shadow: 0 4px 0 #3e603d; transition: 0.1s;
         }
         .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn-ad { background: #3498db; box-shadow: 0 4px 0 #2980b9; }
 
-        /* OVERLAYS */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 2000; display: none;
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* GACHA FLASH ANIMATION */
-        @keyframes flash-gold { 0% { background: gold; } 100% { background: rgba(0,0,0,0.95); } }
-        @keyframes flash-mythic { 0% { background: var(--rarity-mythic); } 100% { background: rgba(0,0,0,0.95); } }
-        .animate-gold { animation: flash-gold 1.5s ease-out; }
-        .animate-mythic { animation: flash-mythic 1.5s ease-out; }
-
-        /* MUSIC PLAYER */
         .footer {
-            position: absolute; bottom: 20px; width: 100%;
+            position: absolute; bottom: 15px; width: 100%;
             display: flex; flex-direction: column; align-items: center; z-index: 1000;
         }
-        .music-bar {
-            background: rgba(0,0,0,0.85); padding: 10px 25px; border-radius: 50px;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
-            border: 2px solid var(--sakura);
+        .music-player {
+            background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 50px;
+            border: 2px solid var(--sakura); display: flex; align-items: center; gap: 10px;
         }
-        input[type=range] { accent-color: var(--sakura); cursor: pointer; width: 120px; }
     </style>
 </head>
 <body>
 
-    <div id="hub-ui" class="panel">
-        <h1 style="margin:0; font-size: 1.4rem; letter-spacing: 1px;">SAKURA SPIRIT</h1>
-        <h2 id="p-display" style="color: var(--green); margin: 5px 0;">0 🌸</h2>
-        <p style="font-size: 11px; margin: 0;">Tree Evolution: <span id="lv-display">1</span> / 100</p>
+    <div id="start-screen">
+        <h1 style="color: var(--green)">SPIRIT TREE</h1>
+        <p>Partnership with Digital Humani</p>
+        <button class="btn" style="width: 200px;" onclick="initApp()">ENTER HUB</button>
+    </div>
+
+    <div class="panel">
+        <h1 style="margin:0; font-size: 1.2rem;">SAKURA HUB</h1>
+        <div class="stats-row">
+            <div style="color: var(--green)">🌸 <span id="p-display">0</span></div>
+            <div style="color: #d35400">🌳 <span id="t-display">0</span></div>
+        </div>
         
         <div id="tree-stage"><div id="tree-core" class="trunk"></div></div>
         
-        <button class="btn" onclick="nurture()">NURTURE (1,000 🌸)</button>
-
-        <div class="game-grid">
-            <div class="card" onclick="openUI('delivery')">🧹 DELIVERY</div>
-            <div class="card" onclick="openUI('rpg')">⚔️ BATTLE</div>
-            <div class="card" onclick="openUI('summon')" style="grid-column: span 2; background: #fff5f7;">✨ SUMMON SPIRITS</div>
+        <button class="btn" onclick="openUI('summon')">✨ SUMMON (500 🌸)</button>
+        <button class="btn btn-ad" onclick="watchAd()">📺 WATCH AD (Plant Tree)</button>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <button class="btn" style="background:#8e44ad" onclick="location.href='?mode=delivery'">🧹 GAME</button>
+            <button class="btn" style="background:#c0392b" onclick="openUI('rpg')">⚔️ BATTLE</button>
         </div>
     </div>
 
     <div id="summon-overlay" class="overlay">
-        <h2 style="color:white; letter-spacing: 2px;">SPIRIT GATE</h2>
-        <div id="summon-card" style="width: 200px; height: 280px; border: 4px solid white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; margin: 20px 0; background: rgba(255,255,255,0.1);">
-            ?
-        </div>
-        <button class="btn" style="width:200px; background: #9b59b6;" onclick="summon()">SUMMON (500 🌸)</button>
-        <button class="btn" style="width:200px; background: #555;" onclick="closeUI()">BACK</button>
+        <h2 style="color:white">SUMMON SPIRITS</h2>
+        <div id="summon-result" style="color:gold; font-size: 2rem; margin: 20px 0;">?</div>
+        <button class="btn" style="width:200px" onclick="doSummon()">PULL (500 🌸)</button>
+        <button class="btn" style="width:200px; background:#555" onclick="closeUI()">CLOSE</button>
     </div>
 
     <div id="rpg-overlay" class="overlay">
-        <div style="color:white; margin-bottom: 20px; font-weight: bold;">ZEN METER: <span id="zen-bar">0</span>%</div>
-        <div style="display:flex; gap:30px; align-items:center; color:white;">
-            <div id="player-team" style="display:flex; flex-direction:column; gap:10px;">
-                <div style="background:var(--rarity-god); padding:5px; border-radius:5px;">[GOD] Character</div>
-                <div style="background:var(--rarity-mythic); padding:5px; border-radius:5px;">[MYTHIC] Character</div>
-            </div>
-            <div style="font-size: 40px;">VS</div>
-            <div style="font-size: 50px;">👹</div>
-        </div>
-        <div style="margin-top:40px; display:flex; gap:10px;">
-            <button class="btn" style="width:100px" onclick="battle('atk')">ATTACK</button>
-            <button class="btn" style="width:100px; background:orange" onclick="battle('zen')">ZEN ULTI</button>
-            <button class="btn" style="width:100px; background:#555" onclick="closeUI()">RETREAT</button>
-        </div>
+        <h2 style="color:white">BATTLE</h2>
+        <div style="color:white">ZEN: <span id="zen-val">0</span>%</div>
+        <button class="btn" style="width:200px" onclick="fight()">ATTACK</button>
+        <button class="btn" style="width:200px; background:grey" onclick="closeUI()">EXIT</button>
     </div>
 
     <div class="footer">
-        <div class="music-bar">
+        <div class="music-player">
             <div id="yt-player"></div>
-            <div style="color:white; font-size: 10px; font-weight: bold;">HOLLOW PURPLE - LOFI DEITY</div>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:12px;">🔈</span>
-                <input type="range" min="0" max="100" value="50" oninput="setVol(this.value)">
-                <span style="font-size:12px;">🔊</span>
-            </div>
+            <span style="color:white; font-size: 10px;">HOLLOW PURPLE - LOFI DEITY</span>
+            <input type="range" min="0" max="100" value="50" oninput="setVol(this.value)">
         </div>
     </div>
 
 <script>
-    // --- YOUTUBE API ---
+    // YouTube API
     let player;
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
@@ -161,35 +134,95 @@
     }
     function setVol(v) { if(player) player.setVolume(v); }
 
-    // --- GAME STATE ---
-    let s = JSON.parse(localStorage.getItem('Sakura_App_Final')) || {
-        p: 0, tree: 1, zen: 0
+    // State Management
+    let state = JSON.parse(localStorage.getItem('SpiritTree_Global')) || {
+        p: 0, realTrees: 0, treeLv: 1, zen: 0
     };
 
-    function sync() {
-        document.getElementById('p-display').textContent = Math.floor(s.p).toLocaleString() + " 🌸";
-        document.getElementById('lv-display').textContent = s.tree;
+    function save() {
+        localStorage.setItem('SpiritTree_Global', JSON.stringify(state));
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('p-display').innerText = Math.floor(state.p).toLocaleString();
+        document.getElementById('t-display').innerText = state.realTrees;
         
         const core = document.getElementById('tree-core');
-        const lv = Math.min(s.tree, 100);
+        const lv = Math.min(state.treeLv, 100);
         core.style.height = (25 + lv * 1.5) + 'px';
         core.style.width = (12 + lv / 6) + 'px';
         
-        if(s.tree > 5) {
+        if(state.treeLv > 5) {
             core.innerHTML = `<div class="leaves" style="width:${50+lv*2.5}px; height:${40+lv*2}px; top:-${20+lv}px; left:-${15+(lv/1.2)}px;"></div>`;
         }
-        localStorage.setItem('Sakura_App_Final', JSON.stringify(s));
     }
 
-    function nurture() {
-        if(s.p >= 1000 && s.tree < 100) { s.p -= 1000; s.tree++; sync(); }
-        else if(s.p < 1000) alert("Need 1,000 Petals!");
+    function initApp() {
+        document.getElementById('start-screen').style.display = 'none';
+        if(player && player.playVideo) player.playVideo();
+        setInterval(() => { state.p += 0.5; save(); }, 1000);
     }
 
-    // --- SUMMON SYSTEM ---
-    function summon() {
-        if(s.p < 500) return alert("Summon costs 500 🌸");
-        s.p -= 500;
-        
+    function watchAd() {
+        alert("Playing Ad... Thank you for helping the environment!");
+        setTimeout(() => {
+            state.realTrees++;
+            state.p += 200; // Bonus petals for watching ad
+            save();
+            alert("Success! 1 Real Tree Added to Digital Humani Queue 🌳");
+        }, 2000);
+    }
+
+    function doSummon() {
+        if(state.p < 500) return alert("Earn more petals first!");
+        state.p -= 500;
         const roll = Math.random() * 100;
-        const overlay = document.getElementById('
+        let res = "RARE";
+        if(roll < 1) res = "GOD";
+        else if(roll < 5) res = "MYTHIC";
+        else if(roll < 15) res = "UR";
+        document.getElementById('summon-result').innerText = res;
+        save();
+    }
+
+    function fight() {
+        state.zen = Math.min(100, state.zen + 20);
+        document.getElementById('zen-val').innerText = state.zen;
+        if(state.zen >= 100) {
+            state.p += 1000; state.zen = 0;
+            alert("Zen Ultimate! +1000 Petals");
+        }
+        save();
+    }
+
+    function openUI(id) { document.getElementById(id + '-overlay').style.display = 'flex'; }
+    function closeUI() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
+
+    // Delivery Game Handler
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('mode') === 'delivery') {
+        document.body.innerHTML = `<div id="game" onclick="jump()" style="width:100vw; height:100vh; background:#3498db; position:relative;">
+            <div id="sc" style="position:absolute; width:100%; text-align:center; top:50px; color:white; font-size:50px; font-weight:bold;">0</div>
+            <div id="pl" style="position:absolute; left:50px; font-size:50px;">🧹</div>
+        </div>`;
+        let py=300, pv=0, score=0;
+        window.jump = () => pv = -9;
+        function loop() {
+            pv += 0.4; py += pv; document.getElementById('pl').style.top = py + 'px';
+            if(py > window.innerHeight || py < -100) {
+                let s = JSON.parse(localStorage.getItem('SpiritTree_Global'));
+                s.p += Math.floor(score/10); localStorage.setItem('SpiritTree_Global', JSON.stringify(s));
+                window.location.href = window.location.origin + window.location.pathname;
+                return;
+            }
+            score++; document.getElementById('sc').innerText = Math.floor(score/10);
+            requestAnimationFrame(loop);
+        }
+        loop();
+    } else {
+        updateUI();
+    }
+</script>
+</body>
+</html>
