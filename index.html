@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | Fixed</title>
+    <title>Sakura Spirit | Lo-Fi Forest</title>
     <style>
         :root {
             --sakura-pink: #ffb7c5;
@@ -11,50 +11,39 @@
             --trunk-brown: #5d4037;
         }
 
-        /* Fixed the blue background issue */
         body {
-            background: #8ec5fc; /* Solid fallback */
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
-            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            width: 100vw;
             overflow: hidden;
         }
 
-        /* Force UI to the front */
         #ui-container {
             position: relative;
-            z-index: 999; 
+            z-index: 10;
             text-align: center;
-            background: rgba(255, 255, 255, 0.85); /* Made more solid for visibility */
+            background: rgba(255, 255, 255, 0.8);
             padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 350px;
-            border: 2px solid white;
+            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            width: 320px;
         }
 
-        .stats { 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            margin-bottom: 15px; 
-            color: #444;
-        }
+        .stats { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; }
 
-        /* --- THE TREE VISUAL --- */
+        /* --- TREE STAGES --- */
         #spirit-stage {
-            height: 150px;
+            height: 160px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            margin: 20px 0;
+            margin-bottom: 20px;
         }
 
         .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; }
@@ -63,7 +52,7 @@
         .canopy { 
             width: 140px; height: 120px; background: var(--sakura-pink); 
             border-radius: 50%; position: absolute; top: -100px; left: -59px; 
-            filter: blur(1px); animation: float 4s infinite ease-in-out; 
+            filter: blur(2px); animation: float 4s infinite ease-in-out; 
         }
 
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
@@ -74,24 +63,30 @@
             background: var(--ui-accent);
             border: none;
             color: white;
-            padding: 15px;
+            padding: 15px 30px;
             border-radius: 50px;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
-            font-size: 1rem;
-            margin-bottom: 15px;
+            transition: 0.2s;
         }
+        .plant-btn:active { transform: scale(0.95); }
 
-        /* YouTube Container */
-        .radio-box {
-            border-radius: 15px;
+        /* --- THE RADIO (Minimalist) --- */
+        .radio-footer {
+            position: absolute;
+            bottom: 20px;
+            width: 200px;
+            height: 40px;
+            opacity: 0.5; /* Makes it subtle */
+            transition: opacity 0.3s;
             overflow: hidden;
-            background: #eee;
-            height: 80px;
+            border-radius: 10px;
+            background: white;
         }
+        .radio-footer:hover { opacity: 1; }
 
-        /* Petal Layer */
+        /* Petal Rain */
         .petal {
             position: absolute;
             background: var(--sakura-pink);
@@ -113,15 +108,15 @@
         <div id="tree-visual"></div>
     </div>
 
-    <button id="plant-btn" class="plant-btn">Nurture Forest (1,000 🌸)</button>
+    <button id="plant-btn" class="plant-btn">NURTURE FOREST (1,000 🌸)</button>
+    <p style="font-size: 0.7rem; margin-top: 10px; color: #666;">Press play on the radio below!</p>
+</div>
 
-    <div class="radio-box">
-        <iframe width="100%" height="80" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1" frameborder="0"></iframe>
-    </div>
+<div class="radio-footer">
+    <iframe width="100%" height="40" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1&showinfo=0&rel=0&autoplay=0" frameborder="0" allow="autoplay"></iframe>
 </div>
 
 <script>
-    // State management
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     
     const sapLabel = document.getElementById('sap-count');
@@ -143,4 +138,39 @@
     }
 
     function updateUI() {
-        sapLabel.textContent = Math.floor(
+        sapLabel.textContent = Math.floor(state.sap).toLocaleString();
+        treeLabel.textContent = state.totalPlanted;
+        updateTreeVisual();
+        localStorage.setItem('spiritTreeSave', JSON.stringify(state));
+    }
+
+    setInterval(() => {
+        state.sap += 1;
+        updateUI();
+    }, 1000);
+
+    plantBtn.onclick = () => {
+        if (state.sap >= 1000) {
+            state.sap -= 1000;
+            state.totalPlanted += 1;
+            updateUI();
+        }
+    };
+
+    function createPetal() {
+        const p = document.createElement('div');
+        p.className = 'petal';
+        const size = Math.random() * 8 + 5;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.top = '-10px';
+        document.body.appendChild(p);
+        p.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: `translate(${Math.random()*100-50}px, 100vh)`, opacity: 0 }], { duration: 6000 }).onfinish = () => p.remove();
+    }
+    setInterval(createPetal, 500);
+
+    updateUI();
+</script>
+</body>
+</html>
