@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <title>Sakura Spirit | Ghibli Radio</title>
     <style>
         :root {
             --ghibli-sky: #87ceeb;
-            --ghibli-cloud: #ffffff;
             --sakura-pink: #ffb7c5;
-            --sakura-dark: #ff91a4;
             --ui-accent: #5a8a58;
         }
 
         body {
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
-            font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,138 +22,62 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            touch-action: manipulation;
-        }
-
-        .cloud {
-            position: absolute;
-            background: var(--ghibli-cloud);
-            width: 200px;
-            height: 60px;
-            border-radius: 50px;
-            opacity: 0.8;
-            filter: blur(20px);
-            z-index: 0;
-            animation: floatClouds 60s linear infinite;
-        }
-
-        @keyframes floatClouds {
-            from { left: -250px; }
-            to { left: 100vw; }
         }
 
         #ui-container {
-            position: relative;
-            z-index: 100;
             text-align: center;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 30px;
-            border-radius: 30px;
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.25);
+            padding: 40px;
+            border-radius: 40px;
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .stats {
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
             margin-bottom: 20px;
-            color: #ffffff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        #spirit-display {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 30px 0;
         }
 
         #tree-art {
-            width: 260px;
-            height: auto;
-            z-index: 2;
-            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
-            pointer-events: none;
+            width: 250px;
+            margin: 20px 0;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+            animation: float 3s ease-in-out infinite;
         }
 
-        .aura {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
-            border-radius: 50%;
-            z-index: 1;
-            animation: pulseAura 5s infinite alternate ease-in-out;
-            pointer-events: none;
-        }
-
-        .petal {
-            position: absolute;
-            background: var(--sakura-pink);
-            width: 12px;
-            height: 8px;
-            border-radius: 50% 0 50% 50%;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 5;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .music-player {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50px;
-            min-width: 280px;
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
 
         .play-btn {
-            background: #ffffff;
+            background: white;
             border: none;
             color: var(--ui-accent);
-            padding: 15px 40px;
-            border-radius: 40px;
+            padding: 18px 50px;
+            border-radius: 50px;
+            font-weight: 800;
             cursor: pointer;
-            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-
-        .play-btn:active { transform: scale(0.95); }
 
         #track-name {
-            font-size: 0.8rem;
-            color: #555;
-            margin-top: 12px;
-            font-weight: 500;
-        }
-
-        @keyframes pulseAura {
-            0% { opacity: 0.3; transform: scale(0.8); }
-            100% { opacity: 0.7; transform: scale(1.2); }
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
-<div class="cloud" style="top: 10%; animation-duration: 80s;"></div>
-<div class="cloud" style="top: 25%; animation-duration: 120s; width: 300px;"></div>
-
 <div id="ui-container">
-    <div class="stats">
-        🌸 PETALS: <span id="sap-count">0</span><br>
-        SHRINES: <span id="tree-count">0</span>
-    </div>
-
-    <div id="spirit-display">
-        <div class="aura"></div>
-        <img id="tree-art" src="/assets/orb-stage-1.png" alt="Sakura Spirit">
-    </div>
+    <div class="stats">🌸 PETALS: <span id="sap-count">0</span></div>
+    
+    <img id="tree-art" src="/assets/orb-stage-1.png" alt="Spirit Tree">
 
     <div class="music-player">
         <button id="play-btn" class="play-btn">START RADIO</button>
@@ -165,12 +86,10 @@
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
-    let lastTick = Date.now(); 
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0 };
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // PATHS: Using the absolute /assets/ as confirmed in your Vercel logs
     const playlist = [
         { name: "After Light", src: "/assets/after_light.mp3" },
         { name: "Get Away", src: "/assets/get_away.mp3" },
@@ -178,58 +97,33 @@
         { name: "W.D.I.D.", src: "/assets/wdid.mp3" }
     ];
 
-    const playBtn = document.getElementById('play-btn');
-    const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
-    const treeArt = document.getElementById('tree-art');
+    const trackLabel = document.getElementById('track-name');
+    const playBtn = document.getElementById('play-btn');
 
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap).toLocaleString();
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    function gameLoop() {
-        const now = Date.now();
-        if (now - lastTick >= 1000) {
-            state.sap += 1;
-            lastTick = now;
-            updateUI();
-        }
-        const float = Math.sin(now / 2000) * 15;
-        if(treeArt) treeArt.style.transform = `translateY(${float}px)`;
-        requestAnimationFrame(gameLoop);
-    }
+    setInterval(() => {
+        state.sap += 1;
+        updateUI();
+    }, 1000);
 
-    function createPetal() {
-        const petal = document.createElement('div');
-        petal.className = 'petal';
-        petal.style.left = (Math.random() * 100) + 'vw';
-        petal.style.top = '-20px';
-        document.body.appendChild(petal);
-
-        petal.animate([
-            { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
-            { opacity: 0.8, offset: 0.1 },
-            { transform: `translate(${(Math.random() * 200)}px, 110vh) rotate(720deg)`, opacity: 0 }
-        ], { duration: 8000 }).onfinish = () => petal.remove();
-    }
-    setInterval(createPetal, 600);
-
-    // ROBUST AUDIO LOADER
     let audioCtx;
     let currentSource;
 
     async function playTrack() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-
-        const track = playlist[currentTrackIndex];
-        trackLabel.textContent = "LOADING...";
-
         try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            const track = playlist[currentTrackIndex];
+            trackLabel.textContent = "TUNING...";
+
             const response = await fetch(track.src);
             if (!response.ok) throw new Error("404");
-            
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
@@ -237,19 +131,19 @@
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = audioBuffer;
             currentSource.connect(audioCtx.destination);
-            currentSource.onended = () => { if(isPlaying) autoNext(); };
+            currentSource.onended = () => { if(isPlaying) nextTrack(); };
             currentSource.start(0);
 
             trackLabel.textContent = "NOW PLAYING: " + track.name;
             isPlaying = true;
             playBtn.textContent = "STOP RADIO";
         } catch (e) {
-            trackLabel.textContent = "ERROR LOADING: " + track.name;
+            trackLabel.textContent = "SOURCE ERROR";
             console.error(e);
         }
     }
 
-    function autoNext() {
+    function nextTrack() {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         playTrack();
     }
@@ -266,7 +160,6 @@
     };
 
     updateUI();
-    gameLoop();
 </script>
 </body>
 </html>
