@@ -9,12 +9,13 @@
             --ghibli-sky: #87ceeb;
             --sakura-pink: #ffb7c5;
             --ui-accent: #5a8a58;
+            --cloud-white: rgba(255, 255, 255, 0.9);
         }
 
         body {
             background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
             color: #2c3e50;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -22,71 +23,158 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            position: relative;
         }
 
+        /* --- GHIBLI CLOUDS --- */
+        .cloud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cloud {
+            position: absolute;
+            background: var(--cloud-white);
+            border-radius: 100px;
+            filter: blur(15px);
+            animation: moveClouds linear infinite;
+            opacity: 0.6;
+        }
+
+        .c1 { width: 200px; height: 60px; top: 10%; left: -250px; animation-duration: 50s; }
+        .c2 { width: 300px; height: 80px; top: 25%; left: -350px; animation-duration: 70s; animation-delay: -10s; }
+        .c3 { width: 150px; height: 50px; top: 15%; left: -200px; animation-duration: 40s; animation-delay: -25s; }
+
+        @keyframes moveClouds {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(calc(100vw + 400px)); }
+        }
+
+        /* --- FALLING PETALS --- */
+        .petal {
+            position: absolute;
+            background-color: var(--sakura-pink);
+            border-radius: 150% 0 150% 150%;
+            width: 10px;
+            height: 10px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.8;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        /* --- UI CONTAINER --- */
         #ui-container {
+            position: relative;
+            z-index: 10;
             text-align: center;
-            background: rgba(255, 255, 255, 0.25);
-            padding: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 35px;
             border-radius: 40px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-width: 300px;
         }
 
         .stats {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: white;
             margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            line-height: 1.5;
         }
 
         #tree-art {
-            width: 250px;
-            margin: 20px 0;
+            width: 220px;
+            margin: 10px 0;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
             animation: float 3s ease-in-out infinite;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .play-btn {
             background: white;
             border: none;
             color: var(--ui-accent);
-            padding: 18px 50px;
+            padding: 15px 30px;
             border-radius: 50px;
             font-weight: 800;
             cursor: pointer;
             text-transform: uppercase;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
+        .plant-btn {
+            background: var(--ui-accent);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .play-btn:active, .plant-btn:active { transform: scale(0.95); }
+
         #track-name {
-            margin-top: 20px;
-            font-size: 0.9rem;
+            margin-top: 15px;
+            font-size: 0.85rem;
             color: #2c3e50;
             font-weight: 600;
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
 
+<div class="cloud-container">
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+</div>
+
 <div id="ui-container">
-    <div class="stats">🌸 PETALS: <span id="sap-count">0</span></div>
+    <div class="stats">
+        🌸 PETALS: <span id="sap-count">0</span><br>
+        ⛩️ SHRINES: <span id="tree-count">0</span>
+    </div>
     
     <img id="tree-art" src="/assets/orb-stage-1.png" alt="Spirit Tree">
 
-    <div class="music-player">
+    <div class="controls">
         <button id="play-btn" class="play-btn">START RADIO</button>
-        <p id="track-name">READY</p>
+        <button id="plant-btn" class="plant-btn">Nurture Forest (1,000 🌸)</button>
     </div>
+    
+    <p id="track-name">READY</p>
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0 };
+    // Initial State including tree count
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let isPlaying = false;
     let currentTrackIndex = 0;
 
@@ -98,19 +186,68 @@
     ];
 
     const sapLabel = document.getElementById('sap-count');
+    const treeLabel = document.getElementById('tree-count');
     const trackLabel = document.getElementById('track-name');
     const playBtn = document.getElementById('play-btn');
+    const plantBtn = document.getElementById('plant-btn');
+    const treeArt = document.getElementById('tree-art');
 
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap).toLocaleString();
+        treeLabel.textContent = state.totalPlanted;
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
+    // Passive petal income
     setInterval(() => {
         state.sap += 1;
         updateUI();
     }, 1000);
 
+    // --- PLANTING LOGIC ---
+    plantBtn.onclick = () => {
+        if (state.sap >= 1000) {
+            state.sap -= 1000;
+            state.totalPlanted += 1;
+            
+            // Visual feedback
+            treeArt.style.transform = "scale(1.2)";
+            setTimeout(() => treeArt.style.transform = "scale(1)", 200);
+            
+            // Burst of petals
+            for(let i=0; i<15; i++) setTimeout(createPetal, i * 50);
+            
+            updateUI();
+        } else {
+            alert("The spirits need 1,000 petals to nurture a new shrine!");
+        }
+    };
+
+    // --- SAKURA PETAL GENERATOR ---
+    function createPetal() {
+        const petal = document.createElement('div');
+        petal.classList.add('petal');
+        const startX = Math.random() * window.innerWidth;
+        const size = Math.random() * 7 + 5;
+        const fallDuration = Math.random() * 5 + 5;
+        const drift = Math.random() * 200 - 100;
+
+        petal.style.left = startX + 'px';
+        petal.style.top = '-20px';
+        petal.style.width = size + 'px';
+        petal.style.height = (size * 0.8) + 'px';
+        document.body.appendChild(petal);
+
+        const animation = petal.animate([
+            { transform: `translate(0, 0) rotate(0deg)`, opacity: 0.8 },
+            { transform: `translate(${drift}px, 110vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+        ], { duration: fallDuration * 1000, easing: 'linear' });
+
+        animation.onfinish = () => petal.remove();
+    }
+    setInterval(createPetal, 600);
+
+    // --- AUDIO LOGIC ---
     let audioCtx;
     let currentSource;
 
@@ -127,7 +264,11 @@
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-            if (currentSource) currentSource.stop();
+            if (currentSource) {
+                currentSource.onended = null; 
+                currentSource.stop();
+            }
+
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = audioBuffer;
             currentSource.connect(audioCtx.destination);
@@ -139,7 +280,6 @@
             playBtn.textContent = "STOP RADIO";
         } catch (e) {
             trackLabel.textContent = "SOURCE ERROR";
-            console.error(e);
         }
     }
 
@@ -149,9 +289,8 @@
     }
 
     playBtn.onclick = () => {
-        if (!isPlaying) {
-            playTrack();
-        } else {
+        if (!isPlaying) playTrack();
+        else {
             if (currentSource) currentSource.stop();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
