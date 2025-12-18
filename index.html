@@ -10,7 +10,7 @@
             background-color: #050a05;
             background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
             color: #e0ffe0;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -42,7 +42,6 @@
             height: auto;
             z-index: 2;
             filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
-            transition: transform 0.1s ease-out;
         }
 
         .aura {
@@ -61,6 +60,7 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             border: 1px solid rgba(0, 255, 255, 0.2);
+            min-width: 250px;
         }
 
         .play-btn {
@@ -73,6 +73,12 @@
             font-size: 0.8rem;
             font-weight: bold;
             text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover {
+            background: #ffffff;
+            box-shadow: 0 0 15px #00ffff;
         }
 
         .plant-btn {
@@ -84,6 +90,11 @@
             cursor: pointer;
             margin-top: 20px;
             font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .plant-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
         }
 
         .leaf {
@@ -120,15 +131,17 @@
         <p id="track-name" style="font-size: 0.7rem; opacity: 0.7; margin-top: 10px;">Music Off</p>
     </div>
 
-    <button class="plant-btn">Plant Real Tree (1,000 Sap)</button>
+    <button id="plant-btn" class="plant-btn">Plant Real Tree (1,000 Sap)</button>
 </div>
 
 <audio id="bg-audio" preload="auto"></audio>
 
 <script>
-    /* ---------- 1. SETTINGS & STATE ---------- */
+    /* ---------- 1. CONFIGURATION & STATE ---------- */
     let isPlaying = false;
     let currentTrackIndex = 0;
+    
+    // IMPORTANT: Match your filenames exactly
     const playlist = [
         { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
         { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
@@ -136,117 +149,115 @@
         { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
     ];
 
-    // Load saved data from browser memory
+    // Load Save Data
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { 
         sap: 0, 
         totalPlanted: 0, 
         lastTick: Date.now() 
     };
 
-    /* ---------- 2. GET ELEMENTS ---------- */
+    /* ---------- 2. DOM ELEMENTS ---------- */
     const audio = document.getElementById('bg-audio');
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
     const treeLabel = document.getElementById('tree-count');
+    const plantBtn = document.getElementById('plant-btn');
 
-    /* ---------- 3. FUNCTIONS ---------- */
-    function syncUI() {
+    /* ---------- 3. UI SYNC ---------- */
+    function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    function loadTrack(i) {
-        audio.src = playlist[i].src;
-        trackLabel.textContent = `NOW PLAYING: ${playlist[i].name}`;
-    }
-
-    /* ---------- 4. BUTTON LOGIC ---------- */
-    playBtn.onclick = async () => {
-        // Load the song file on the first click
-        if (!audio.src) { 
-            loadTrack(currentTrackIndex); 
+    /* ---------- 4. AUDIO LOGIC ---------- */
+    async function toggleMusic() {
+        // Set source if empty
+        if (!audio.src || audio.src === "") {
+            audio.src = playlist[currentTrackIndex].src;
         }
 
         try {
             if (!isPlaying) {
                 await audio.play();
-                playBtn.textContent = 'Pause Radio';
+                playBtn.textContent = "Pause Radio";
+                trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
+                isPlaying = true;
             } else {
                 audio.pause();
-                playBtn.textContent = 'Play Radio';
+                playBtn.textContent = "Play Radio";
+                isPlaying = false;
             }
-            isPlaying = !isPlaying;
-        } catch (e) {
-            console.error("Playback failed:", e);
+        } catch (err) {
+            console.error("Playback blocked:", err);
+            trackLabel.textContent = "Error: Click again to start music";
         }
-    };
+    }
 
-    // Auto-advance to next song
+    playBtn.addEventListener('click', toggleMusic);
+
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-        loadTrack(currentTrackIndex);
+        audio.src = playlist[currentTrackIndex].src;
         audio.play().catch(e => console.log("Auto-play blocked"));
+        trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
     };
 
-    /* ---------- 5. GAME ENGINE (TICK) ---------- */
-    function tick() {
+    /* ---------- 5. GAME LOOP (SAP & ANIMATION) ---------- */
+    function gameLoop() {
         const now = Date.now();
         
-        // Add 1 Sap every second
+        // Accumulate Sap (1 per second)
         if (now - state.lastTick >= 1000) {
             state.sap += 1;
             state.lastTick = now;
-            syncUI();
+            updateUI();
         }
 
-        // Tree Floating & Pulsing Animation
+        // Tree Floating & Pulse Animation
         const treeArt = document.getElementById('tree-art');
         if (treeArt) {
-            // Pulse faster if music is playing
-            const speed = isPlaying ? 200 : 1000;
-            const pulse = 1 + Math.sin(now / speed) * 0.03;
-            const float = Math.sin(now / 1500) * 10;
+            const pulseSpeed = isPlaying ? 250 : 1500;
+            const float = Math.sin(now / 1500) * 12;
+            const pulse = 1 + Math.sin(now / pulseSpeed) * 0.04;
             treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
         }
 
-        requestAnimationFrame(tick);
+        requestAnimationFrame(gameLoop);
     }
 
-    /* ---------- 6. EFFECTS ---------- */
-    // Falling Leaves Effect
+    /* ---------- 6. EFFECTS (LEAVES & PLANTING) ---------- */
     setInterval(() => {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
         leaf.style.left = Math.random() * 100 + 'vw';
-        const size = Math.random() * 5 + 3;
+        const size = Math.random() * 6 + 2;
         leaf.style.width = leaf.style.height = size + 'px';
         document.body.appendChild(leaf);
 
         leaf.animate([
-            { transform: 'translateY(-10vh)' }, 
-            { transform: 'translateY(110vh)' }
-        ], { 
-            duration: Math.random() * 3000 + 4000 
+            { transform: 'translateY(-10vh) rotate(0deg)' },
+            { transform: 'translateY(110vh) rotate(360deg)' }
+        ], {
+            duration: Math.random() * 4000 + 4000
         }).onfinish = () => leaf.remove();
-    }, 1000);
+    }, 1200);
 
-    // Planting Logic
-    document.querySelector('.plant-btn').onclick = () => {
+    plantBtn.onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
-            syncUI();
-            alert("A tree has been added to the forest!");
+            updateUI();
+            alert("A tree has been added to the world!");
         } else {
-            alert("Gather more Sap first! (Need 1,000)");
+            alert("Not enough Sap! You need 1,000.");
         }
     };
 
-    /* ---------- 7. START ---------- */
-    syncUI();
-    tick();
+    /* ---------- 7. INITIALIZE ---------- */
+    updateUI();
+    gameLoop();
 </script>
 
 </body>
