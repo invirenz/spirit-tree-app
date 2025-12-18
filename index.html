@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spirit Tree | Indie Radio</title>
+    <title>Spirit Tree | Global Radio</title>
     <style>
         body {
             background-color: #050a05;
@@ -17,10 +17,12 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
         #ui-container {
-            z-index: 10;
+            position: relative;
+            z-index: 50;
             text-align: center;
         }
 
@@ -44,7 +46,7 @@
             height: auto;
             z-index: 2;
             filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
-            transition: transform 0.1s linear;
+            pointer-events: none; /* Art shouldn't block clicks */
         }
 
         .aura {
@@ -55,6 +57,7 @@
             border-radius: 50%;
             z-index: 1;
             animation: pulseAura 4s infinite alternate ease-in-out;
+            pointer-events: none;
         }
 
         .music-player {
@@ -71,12 +74,19 @@
             background: #00ffff;
             border: none;
             color: #050a05;
-            padding: 12px 30px;
-            border-radius: 25px;
+            padding: 15px 40px;
+            border-radius: 30px;
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            display: inline-block;
+        }
+
+        .play-btn:active {
+            transform: scale(0.95);
         }
 
         .plant-btn {
@@ -91,17 +101,13 @@
             transition: 0.3s;
         }
 
-        .plant-btn:hover {
-            background: rgba(0, 255, 255, 0.1);
-        }
-
         .leaf {
             position: absolute;
             background: #00ffff;
             border-radius: 50%;
             opacity: 0.3;
             pointer-events: none;
-            z-index: 1;
+            z-index: 0;
         }
 
         @keyframes pulseAura {
@@ -121,7 +127,7 @@
 <div id="ui-container">
     <div class="stats">
         SAP: <span id="sap-count">0</span><br>
-        TREES PLANTED: <span id="tree-count">0</span>
+        GLOBAL TREES: <span id="tree-count">0</span>
     </div>
 
     <div id="spirit-display">
@@ -131,22 +137,19 @@
 
     <div class="music-player">
         <button id="play-btn" class="play-btn">Play Radio</button>
-        <p id="track-name">Radio Offline</p>
+        <p id="track-name">Ready to stream</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
 
 <script>
-    // --- STATE MANAGEMENT ---
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || {
-        sap: 0,
-        totalPlanted: 0
-    };
+    // --- 1. CONFIG & STATE ---
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastUpdateTime = Date.now();
+    let isPlaying = false;
+    let currentTrackIndex = 0;
 
-    // --- PLAYLIST ---
-    // Ensure filenames in /assets match exactly
     const playlist = [
         { name: "After Light", src: "assets/After_Light_mastered.mp3" },
         { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
@@ -154,11 +157,7 @@
         { name: "W.D.I.D.", src: "assets/WDID.mp3" }
     ];
 
-    let currentTrackIndex = 0;
-    let isPlaying = false;
     const audio = new Audio();
-    audio.preload = "auto";
-
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
@@ -166,54 +165,57 @@
     const plantBtn = document.getElementById('plant-btn');
     const treeArt = document.getElementById('tree-art');
 
+    // --- 2. CORE FUNCTIONS ---
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    // --- GAME ENGINE ---
     function gameLoop() {
         const now = Date.now();
         const elapsed = now - lastUpdateTime;
-
-        // Sap Ticking
         if (elapsed >= 1000) {
             state.sap += 1;
             lastUpdateTime = now;
             updateUI();
         }
-
-        // Orb Animation
         const float = Math.sin(now / 1500) * 10;
         const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.03;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
-
         requestAnimationFrame(gameLoop);
     }
 
-    // --- MUSIC LOGIC ---
-    async function toggleMusic() {
-        if (!audio.src || audio.src === "" || audio.src.includes('undefined')) {
+    // --- 3. THE BUTTON FIX ---
+    async function startMusic() {
+        console.log("Play button triggered");
+        
+        // Initial setup for the audio object
+        if (!audio.src || audio.src === "") {
             audio.src = playlist[currentTrackIndex].src;
         }
 
-        try {
-            if (audio.paused) {
+        if (audio.paused) {
+            try {
                 await audio.play();
                 isPlaying = true;
                 playBtn.textContent = "Pause Radio";
                 trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
-            } else {
-                audio.pause();
-                isPlaying = false;
-                playBtn.textContent = "Play Radio";
+                playBtn.style.backgroundColor = "#ffffff";
+            } catch (err) {
+                console.error("Audio error:", err);
+                trackLabel.textContent = "Interaction required. Try again!";
             }
-        } catch (err) {
-            console.error("Audio block:", err);
-            trackLabel.textContent = "Error: File missing or blocked";
+        } else {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = "Play Radio";
+            playBtn.style.backgroundColor = "#00ffff";
         }
     }
+
+    // --- 4. EVENTS ---
+    playBtn.onclick = startMusic;
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -222,27 +224,17 @@
         trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
     };
 
-    // --- PLANTING LOGIC ---
     plantBtn.onclick = async () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
             updateUI();
-
-            try {
-                const response = await fetch('/api/plant', { method: 'POST' });
-                if (response.ok) {
-                    alert("A tree is being planted globally! Check your dashboard.");
-                }
-            } catch (err) {
-                console.error("API Error:", err);
-            }
+            try { await fetch('/api/plant', { method: 'POST' }); } catch (e) {}
         } else {
             alert("Need 1,000 Sap!");
         }
     };
 
-    // --- PARTICLE EFFECTS ---
     function createLeaf() {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
@@ -251,18 +243,13 @@
         leaf.style.width = size;
         leaf.style.height = size;
         document.body.appendChild(leaf);
-
-        const duration = Math.random() * 3000 + 5000;
         leaf.animate([
-            { transform: 'translateY(-10vh) rotate(0deg)', opacity: 0 },
-            { transform: 'translateY(50vh) rotate(180deg)', opacity: 0.3, offset: 0.5 },
-            { transform: 'translateY(110vh) rotate(360deg)', opacity: 0 }
-        ], { duration: duration, easing: 'linear' }).onfinish = () => leaf.remove();
+            { transform: 'translateY(-10vh)', opacity: 0 },
+            { transform: 'translateY(110vh)', opacity: 0 }
+        ], { duration: Math.random() * 3000 + 5000 }).onfinish = () => leaf.remove();
     }
 
-    // --- INITIALIZE ---
-    playBtn.addEventListener('click', toggleMusic);
-    setInterval(createLeaf, 1500);
+    setInterval(createLeaf, 2000);
     updateUI();
     requestAnimationFrame(gameLoop);
 
