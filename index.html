@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spirit Tree | Global Radio</title>
     <style>
         body {
@@ -22,7 +22,7 @@
 
         #ui-container {
             position: relative;
-            z-index: 50;
+            z-index: 100;
             text-align: center;
         }
 
@@ -46,7 +46,7 @@
             height: auto;
             z-index: 2;
             filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
-            pointer-events: none; /* Art shouldn't block clicks */
+            pointer-events: none;
         }
 
         .aura {
@@ -74,19 +74,22 @@
             background: #00ffff;
             border: none;
             color: #050a05;
-            padding: 15px 40px;
-            border-radius: 30px;
+            padding: 18px 45px;
+            border-radius: 40px;
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            letter-spacing: 2px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             display: inline-block;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .play-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
+            background: #ffffff;
         }
 
         .plant-btn {
@@ -105,7 +108,7 @@
             position: absolute;
             background: #00ffff;
             border-radius: 50%;
-            opacity: 0.3;
+            opacity: 0.2;
             pointer-events: none;
             z-index: 0;
         }
@@ -119,6 +122,8 @@
             font-size: 0.8rem;
             opacity: 0.8;
             margin-top: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -136,8 +141,8 @@
     </div>
 
     <div class="music-player">
-        <button id="play-btn" class="play-btn">Play Radio</button>
-        <p id="track-name">Ready to stream</p>
+        <button id="play-btn" class="play-btn">START RADIO</button>
+        <p id="track-name">SIGNAL READY</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
@@ -157,7 +162,10 @@
         { name: "W.D.I.D.", src: "assets/WDID.mp3" }
     ];
 
+    // Global audio object
     const audio = new Audio();
+    audio.crossOrigin = "anonymous";
+    
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
@@ -165,7 +173,7 @@
     const plantBtn = document.getElementById('plant-btn');
     const treeArt = document.getElementById('tree-art');
 
-    // --- 2. CORE FUNCTIONS ---
+    // --- 2. GAME ENGINE ---
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
@@ -186,42 +194,43 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- 3. THE BUTTON FIX ---
-    async function startMusic() {
-        console.log("Play button triggered");
-        
-        // Initial setup for the audio object
-        if (!audio.src || audio.src === "") {
+    // --- 3. THE "FORCE" MUSIC TRIGGER ---
+    async function toggleRadio() {
+        // 1. Immediately try to load the source to show the browser we mean business
+        if (!audio.src || audio.src === "" || audio.src.endsWith('/')) {
             audio.src = playlist[currentTrackIndex].src;
+            audio.load(); 
         }
 
         if (audio.paused) {
-            try {
-                await audio.play();
+            // Use a promise to catch specific browser rejection
+            audio.play().then(() => {
                 isPlaying = true;
-                playBtn.textContent = "Pause Radio";
-                trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
-                playBtn.style.backgroundColor = "#ffffff";
-            } catch (err) {
-                console.error("Audio error:", err);
-                trackLabel.textContent = "Interaction required. Try again!";
-            }
+                playBtn.textContent = "STOP RADIO";
+                trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+                console.log("Audio playing successfully.");
+            }).catch(e => {
+                console.error("Playback Error:", e);
+                // Fallback for mobile/stricter browsers
+                trackLabel.textContent = "TAP AGAIN TO UNLOCK AUDIO";
+            });
         } else {
             audio.pause();
             isPlaying = false;
-            playBtn.textContent = "Play Radio";
-            playBtn.style.backgroundColor = "#00ffff";
+            playBtn.textContent = "START RADIO";
+            trackLabel.textContent = "SIGNAL PAUSED";
         }
     }
 
-    // --- 4. EVENTS ---
-    playBtn.onclick = startMusic;
+    // --- 4. EVENT LISTENERS ---
+    // Using both mousedown and click to catch the fastest interaction possible
+    playBtn.addEventListener('click', toggleRadio);
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         audio.src = playlist[currentTrackIndex].src;
         audio.play();
-        trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
+        trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
     };
 
     plantBtn.onclick = async () => {
@@ -244,9 +253,9 @@
         leaf.style.height = size;
         document.body.appendChild(leaf);
         leaf.animate([
-            { transform: 'translateY(-10vh)', opacity: 0 },
-            { transform: 'translateY(110vh)', opacity: 0 }
-        ], { duration: Math.random() * 3000 + 5000 }).onfinish = () => leaf.remove();
+            { transform: 'translateY(-10vh) rotate(0deg)', opacity: 0 },
+            { transform: 'translateY(110vh) rotate(360deg)', opacity: 0 }
+        ], { duration: Math.random() * 3000 + 6000 }).onfinish = () => leaf.remove();
     }
 
     setInterval(createLeaf, 2000);
