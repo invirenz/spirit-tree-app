@@ -5,17 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spirit Tree | Indie Radio</title>
     <style>
-        /* 1. CINEMATIC OVERLAY (Film Grain) */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://grainy-gradients.vercel.app/noise.svg');
-            opacity: 0.04;
-            pointer-events: none;
-            z-index: 100;
-        }
-
+        /* Base Setup */
         body {
             background: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
             color: #e0ffe0;
@@ -29,7 +19,10 @@
             overflow: hidden;
         }
 
-        #ui-container { z-index: 10; text-align: center; }
+        #ui-container { 
+            z-index: 10; 
+            text-align: center; 
+        }
 
         .stats {
             font-size: 1.2rem;
@@ -56,171 +49,57 @@
 
         .aura {
             position: absolute;
-            width: 350px; height: 350px;
+            width: 350px; 
+            height: 350px;
             background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
             border-radius: 50%;
             z-index: 1;
             animation: pulseAura 4s infinite alternate ease-in-out;
         }
 
-        /* MUSIC CONTROLS */
+        @keyframes pulseAura {
+            0% { opacity: 0.1; transform: scale(0.9); }
+            100% { opacity: 0.4; transform: scale(1.1); }
+        }
+
+        /* Music and Buttons */
         .music-player {
             margin-top: 20px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            border: 1px solid rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.2);
         }
 
         .play-btn {
-            background: none;
-            border: 1px solid #00ffff;
-            color: #00ffff;
+            background: #00ffff;
+            border: none;
+            color: #050a05;
             padding: 10px 25px;
             border-radius: 20px;
             cursor: pointer;
             font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
+            font-weight: bold;
         }
-
-        .play-btn:hover { background: rgba(0, 255, 255, 0.1); box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
 
         .plant-btn {
-            background: #00ffff; color: #050a05;
-            border: none; padding: 12px 30px;
-            font-size: 1rem; border-radius: 30px;
-            cursor: pointer; margin-top: 20px;
-            font-weight: bold; transition: 0.3s;
+            background: none;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
         }
-
-        .plant-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px #00ffff; }
 
         .leaf {
-            position: absolute; background: #00ffff;
-            border-radius: 50%; opacity: 0.4;
+            position: absolute;
+            background: #00ffff;
+            border-radius: 50%;
+            opacity: 0.4;
             box-shadow: 0 0 8px #00ffff;
-        }
-
-        @keyframes pulseAura {
-            0% { opacity: 0.1; transform: scale(0.9); }
-            100% { opacity: 0.4; transform: scale(1.1); }
         }
     </style>
 </head>
-<body>
-
-    <div id="ui-container">
-        <div class="stats">
-            SAP: <span id="sap-count">0</span><br>
-            TREES PLANTED: <span id="tree-count">0</span>
-        </div>
-
-        <div id="spirit-display">
-            <div class="aura"></div>
-            <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
-        </div>
-
-        <div class="music-player">
-            <button class="play-btn" id="music-toggle" onclick="toggleMusic()">Start Indie Radio</button>
-            <p id="track-name" style="font-size: 0.7rem; opacity: 0.6; margin-top: 10px;">Select to play</p>
-        </div>
-
-        <button class="plant-btn" onclick="plantRealTree()">Plant Real Tree (1,000 Sap)</button>
-    </div>
-
-    <audio id="bg-audio"></audio>
-
-    <script>
-        // 1. PLAYLIST (Matched to your exact file names)
-        const playlist = [
-            { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
-            { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
-            { name: "Half of Me", src: "assets/Half%20of%20Me_mastered.mp3" },
-            { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
-        ];
-
-        let currentTrackIndex = 0;
-        let isPlaying = false;
-        let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0, lastTick: Date.now() };
-
-        const audio = document.getElementById('bg-audio');
-        const trackLabel = document.getElementById('track-name');
-        const btn = document.getElementById('music-toggle');
-
-        function loadTrack(index) {
-            const track = playlist[index];
-            audio.src = track.src;
-            trackLabel.innerText = `NOW PLAYING: ${track.name}`;
-        }
-
-        loadTrack(currentTrackIndex);
-
-        function toggleMusic() {
-            if (isPlaying) {
-                audio.pause();
-                btn.innerText = "Resume Radio";
-            } else {
-                audio.play().catch(e => console.log("Audio play blocked"));
-                btn.innerText = "Pause Radio";
-            }
-            isPlaying = !isPlaying;
-        }
-
-        audio.onended = () => {
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-            loadTrack(currentTrackIndex);
-            audio.play();
-        };
-
-        // 2. THE ENGINE
-        function tick() {
-            const now = Date.now();
-            if (now - state.lastTick >= 1000) {
-                state.sap += 1;
-                state.lastTick = now;
-                document.getElementById('sap-count').innerText = Math.floor(state.sap);
-                document.getElementById('tree-count').innerText = state.totalPlanted;
-                localStorage.setItem('spiritTreeSave', JSON.stringify(state));
-            }
-            
-            // Pulsing logic
-            const treeArt = document.getElementById('tree-art');
-            if (treeArt) {
-                const freq = isPlaying ? 200 : 1000;
-                const amp = isPlaying ? 0.05 : 0.02;
-                const pulse = 1 + Math.sin(now / freq) * amp;
-                treeArt.style.transform = `translateY(${Math.sin(now/1500)*10}px) scale(${pulse})`;
-            }
-            requestAnimationFrame(tick);
-        }
-
-        function createLeaf() {
-            const leaf = document.createElement('div');
-            leaf.className = 'leaf';
-            leaf.style.left = Math.random() * 100 + 'vw';
-            const size = Math.random() * 5 + 3;
-            leaf.style.width = size + 'px'; leaf.style.height = size + 'px';
-            document.body.appendChild(leaf);
-            leaf.animate([
-                { transform: 'translateY(0)', opacity: 0.5 },
-                { transform: 'translateY(110vh)', opacity: 0 }
-            ], { duration: Math.random() * 5000 + 4000 }).onfinish = () => leaf.remove();
-        }
-        setInterval(createLeaf, 900);
-
-        async function plantRealTree() {
-            if (state.sap >= 1000) {
-                state.sap -= 1000;
-                state.totalPlanted += 1;
-                alert("The spirit world thanks you. A tree is being planted.");
-            } else {
-                alert("You need 1,000 Sap!");
-            }
-        }
-
-        tick();
-    </script>
-</body>
-</html>
