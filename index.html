@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spirit Tree | Indie Radio</title>
+
     <style>
         body {
             background-color: #050a05;
@@ -18,13 +19,16 @@
             margin: 0;
             overflow: hidden;
         }
+
         #ui-container { z-index: 10; text-align: center; }
+
         .stats {
             font-size: 1.2rem;
             letter-spacing: 2px;
             margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(0,255,255,0.6);
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
         }
+
         #spirit-display {
             position: relative;
             display: flex;
@@ -32,28 +36,33 @@
             justify-content: center;
             margin: 30px 0;
         }
+
         #tree-art {
             width: 240px;
             height: auto;
             z-index: 2;
-            filter: drop-shadow(0 0 15px rgba(0,255,255,0.7));
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
+            transition: transform 0.1s ease-out;
         }
+
         .aura {
             position: absolute;
             width: 350px;
             height: 350px;
-            background: radial-gradient(circle, rgba(0,255,255,0.1) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
             border-radius: 50%;
             z-index: 1;
             animation: pulseAura 4s infinite alternate ease-in-out;
         }
+
         .music-player {
             margin-top: 20px;
             padding: 15px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            border: 1px solid rgba(0,255,255,0.2);
+            border: 1px solid rgba(0, 255, 255, 0.2);
         }
+
         .play-btn {
             background: #00ffff;
             border: none;
@@ -65,6 +74,7 @@
             font-weight: bold;
             text-transform: uppercase;
         }
+
         .plant-btn {
             background: none;
             border: 1px solid #00ffff;
@@ -75,6 +85,7 @@
             margin-top: 20px;
             font-size: 1rem;
         }
+
         .leaf {
             position: absolute;
             background: #00ffff;
@@ -83,12 +94,14 @@
             box-shadow: 0 0 8px #00ffff;
             pointer-events: none;
         }
+
         @keyframes pulseAura {
             0% { opacity: 0.1; transform: scale(0.9); }
             100% { opacity: 0.4; transform: scale(1.1); }
         }
     </style>
 </head>
+
 <body>
 
 <div id="ui-container">
@@ -104,43 +117,18 @@
 
     <div class="music-player">
         <button id="play-btn" class="play-btn">Play Radio</button>
-        <p id="track-name" style="font-size:0.7rem;opacity:0.7;margin-top:10px;">Music Off</p>
+        <p id="track-name" style="font-size: 0.7rem; opacity: 0.7; margin-top: 10px;">Music Off</p>
     </div>
 
     <button class="plant-btn">Plant Real Tree (1,000 Sap)</button>
 </div>
 
-<audio id="bg-audio" preload="metadata"></audio>
+<audio id="bg-audio" preload="auto"></audio>
 
 <script>
-    /* ---------- INITIAL STATE ---------- */
-    let currentTrackIndex = 0;
+    /* ---------- 1. SETTINGS & STATE ---------- */
     let isPlaying = false;
-
-    function loadState() {
-        try {
-            const raw = localStorage.getItem('spiritTreeSave');
-            const parsed = raw ? JSON.parse(raw) : {};
-            return {
-                sap: Number(parsed.sap) || 0,
-                totalPlanted: Number(parsed.totalPlanted) || 0,
-                lastTick: Number(parsed.lastTick) || Date.now()
-            };
-        } catch (e) {
-            return { sap: 0, totalPlanted: 0, lastTick: Date.now() };
-        }
-    }
-
-    let state = loadState();
-
-    /* ---------- ELEMENTS ---------- */
-    const audio = document.getElementById('bg-audio');
-    const playBtn = document.getElementById('play-btn');
-    const trackLabel = document.getElementById('track-name');
-    const sapLabel = document.getElementById('sap-count');
-    const treeLabel = document.getElementById('tree-count');
-
-    /* ---------- PLAYLIST ---------- */
+    let currentTrackIndex = 0;
     const playlist = [
         { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
         { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
@@ -148,7 +136,21 @@
         { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
     ];
 
-    /* ---------- CORE FUNCTIONS ---------- */
+    // Load saved data from browser memory
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { 
+        sap: 0, 
+        totalPlanted: 0, 
+        lastTick: Date.now() 
+    };
+
+    /* ---------- 2. GET ELEMENTS ---------- */
+    const audio = document.getElementById('bg-audio');
+    const playBtn = document.getElementById('play-btn');
+    const trackLabel = document.getElementById('track-name');
+    const sapLabel = document.getElementById('sap-count');
+    const treeLabel = document.getElementById('tree-count');
+
+    /* ---------- 3. FUNCTIONS ---------- */
     function syncUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
@@ -156,14 +158,17 @@
     }
 
     function loadTrack(i) {
-        audio.pause();
         audio.src = playlist[i].src;
-        audio.load();
         trackLabel.textContent = `NOW PLAYING: ${playlist[i].name}`;
     }
 
-    /* ---------- EVENT HANDLERS ---------- */
+    /* ---------- 4. BUTTON LOGIC ---------- */
     playBtn.onclick = async () => {
+        // Load the song file on the first click
+        if (!audio.src) { 
+            loadTrack(currentTrackIndex); 
+        }
+
         try {
             if (!isPlaying) {
                 await audio.play();
@@ -175,36 +180,42 @@
             isPlaying = !isPlaying;
         } catch (e) {
             console.error("Playback failed:", e);
-            alert("Audio could not start. Please ensure the 'assets' folder is correct.");
         }
     };
 
+    // Auto-advance to next song
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         loadTrack(currentTrackIndex);
-        audio.play().catch(()=>{});
+        audio.play().catch(e => console.log("Auto-play blocked"));
     };
 
-    /* ---------- GAME LOOP ---------- */
+    /* ---------- 5. GAME ENGINE (TICK) ---------- */
     function tick() {
         const now = Date.now();
-        const delta = now - state.lastTick;
-
-        if (delta >= 1000) {
-            state.sap += Math.floor(delta / 1000);
+        
+        // Add 1 Sap every second
+        if (now - state.lastTick >= 1000) {
+            state.sap += 1;
             state.lastTick = now;
             syncUI();
         }
 
-        const tree = document.getElementById('tree-art');
-        if (tree) {
-            const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
-            tree.style.transform = `translateY(${Math.sin(now / 1500) * 10}px) scale(${scale})`;
+        // Tree Floating & Pulsing Animation
+        const treeArt = document.getElementById('tree-art');
+        if (treeArt) {
+            // Pulse faster if music is playing
+            const speed = isPlaying ? 200 : 1000;
+            const pulse = 1 + Math.sin(now / speed) * 0.03;
+            const float = Math.sin(now / 1500) * 10;
+            treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
         }
+
         requestAnimationFrame(tick);
     }
 
-    /* ---------- PARTICLES ---------- */
+    /* ---------- 6. EFFECTS ---------- */
+    // Falling Leaves Effect
     setInterval(() => {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
@@ -213,28 +224,30 @@
         leaf.style.width = leaf.style.height = size + 'px';
         document.body.appendChild(leaf);
 
-        leaf.animate(
-            [{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }],
-            { duration: Math.random() * 3000 + 4000 }
-        ).onfinish = () => leaf.remove();
+        leaf.animate([
+            { transform: 'translateY(-10vh)' }, 
+            { transform: 'translateY(110vh)' }
+        ], { 
+            duration: Math.random() * 3000 + 4000 
+        }).onfinish = () => leaf.remove();
     }, 1000);
 
-    /* ---------- PLANTING ---------- */
+    // Planting Logic
     document.querySelector('.plant-btn').onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
-            state.totalPlanted++;
+            state.totalPlanted += 1;
             syncUI();
-            alert("Tree planted!");
+            alert("A tree has been added to the forest!");
         } else {
-            alert("Not enough Sap!");
+            alert("Gather more Sap first! (Need 1,000)");
         }
     };
 
-    /* ---------- INITIALIZE ---------- */
-    loadTrack(currentTrackIndex);
+    /* ---------- 7. START ---------- */
     syncUI();
     tick();
 </script>
+
 </body>
 </html>
