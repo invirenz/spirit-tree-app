@@ -97,6 +97,14 @@
             font-size: 0.9rem;
         }
 
+        #track-name {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-top: 15px;
+            letter-spacing: 1px;
+            min-height: 1.2em;
+        }
+
         .leaf {
             position: absolute;
             background: #00ffff;
@@ -109,13 +117,6 @@
         @keyframes pulseAura {
             0% { opacity: 0.2; transform: scale(0.9); }
             100% { opacity: 0.5; transform: scale(1.1); }
-        }
-
-        #track-name {
-            font-size: 0.7rem;
-            opacity: 0.8;
-            margin-top: 15px;
-            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -146,6 +147,7 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
 
+    // Relative path used here (no starting slash)
     const playlist = [
         { name: "After Light", src: "assets/After_Light_mastered.mp3" },
         { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
@@ -153,10 +155,8 @@
         { name: "W.D.I.D.", src: "assets/WDID.mp3" }
     ];
 
-    // Initialize Audio Object
     const audio = new Audio();
     audio.crossOrigin = "anonymous";
-    audio.preload = "auto";
 
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
@@ -164,7 +164,6 @@
     const treeLabel = document.getElementById('tree-count');
     const treeArt = document.getElementById('tree-art');
 
-    // --- GAME LOGIC ---
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
@@ -184,38 +183,25 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- THE UNLOCKER ---
     async function startRadio() {
-        console.log("Activation triggered...");
+        trackLabel.textContent = "ATTEMPTING CONNECTION...";
 
-        // Step 1: Force an AudioContext resume (Standard Web Audio fix)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') {
-            await audioCtx.resume();
-        }
-
-        // Step 2: Set source if missing
-        if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
+        // Force reload to help browser recognition
+        if (!audio.src || audio.src === "" || audio.paused) {
             audio.src = playlist[currentTrackIndex].src;
             audio.load();
         }
 
-        if (audio.paused) {
-            try {
-                // Step 3: Attempt play
-                await audio.play();
-                isPlaying = true;
-                playBtn.textContent = "PAUSE RADIO";
-                trackLabel.textContent = "STREAMING: " + playlist[currentTrackIndex].name;
-            } catch (err) {
-                console.error("Critical Block:", err);
-                trackLabel.textContent = "FILE MISSING OR BLOCKED. TAP AGAIN.";
-            }
-        } else {
-            audio.pause();
-            isPlaying = false;
-            playBtn.textContent = "RESUME RADIO";
-            trackLabel.textContent = "PAUSED";
+        try {
+            await audio.play();
+            isPlaying = true;
+            playBtn.textContent = "PAUSE RADIO";
+            trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+            trackLabel.style.color = "#00ffff";
+        } catch (err) {
+            console.error("Audio Load Failed:", err);
+            trackLabel.textContent = "404 ERROR: CHECK ASSETS FOLDER";
+            trackLabel.style.color = "#ff4444";
         }
     }
 
@@ -225,10 +211,9 @@
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         audio.src = playlist[currentTrackIndex].src;
         audio.play();
-        trackLabel.textContent = "STREAMING: " + playlist[currentTrackIndex].name;
+        trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
     };
 
-    // --- SAP PLANTING ---
     document.getElementById('plant-btn').onclick = async () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
@@ -240,7 +225,6 @@
         }
     };
 
-    // --- BACKGROUND LEAVES ---
     function createLeaf() {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
