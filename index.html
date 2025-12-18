@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spirit Tree | Global Radio</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo="> <title>Spirit Tree | Global Radio</title>
     <style>
         body {
             background-color: #050a05;
@@ -94,7 +94,18 @@
             cursor: pointer;
             margin-top: 25px;
             font-size: 0.9rem;
-            pointer-events: auto;
+        }
+
+        /* GHIBLI LEAVES */
+        .leaf {
+            position: absolute;
+            background: #78ffd6;
+            width: 10px;
+            height: 15px;
+            border-radius: 2px 10px 2px 10px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 5;
         }
 
         #track-name {
@@ -102,7 +113,6 @@
             opacity: 0.8;
             margin-top: 15px;
             letter-spacing: 1px;
-            min-height: 1.2em;
         }
 
         @keyframes pulseAura {
@@ -133,7 +143,6 @@
 </div>
 
 <script>
-    // 1. FIXED STATE & TIMING
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastTick = Date.now(); 
     let isPlaying = false;
@@ -146,10 +155,10 @@
         { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
-    // 2. AUDIO SETUP
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     let currentSource;
+    let backupAudio = new Audio(); // Compatibility fallback
 
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
@@ -163,56 +172,82 @@
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    // 3. GAME LOOP (SAP ACCUMULATION)
+    // --- SAP LOOP ---
     function gameLoop() {
         const now = Date.now();
-        
         if (now - lastTick >= 1000) {
             state.sap += 1;
             lastTick = now;
             updateUI();
         }
-
         const float = Math.sin(now / 1500) * 10;
         const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.04;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
-        
         requestAnimationFrame(gameLoop);
     }
 
-    // 4. AUDIO DECODING
-    async function playCurrentTrack() {
-        if (!audioCtx) audioCtx = new AudioContext();
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
+    // --- LEAF PARTICLES ---
+    function createLeaf() {
+        const leaf = document.createElement('div');
+        leaf.className = 'leaf';
+        leaf.style.left = Math.random() * 100 + 'vw';
+        leaf.style.top = '-20px';
+        const sizeScale = Math.random() * 0.8 + 0.4;
+        leaf.style.transform = `scale(${sizeScale}) rotate(${Math.random() * 360}deg)`;
+        document.body.appendChild(leaf);
 
-        trackLabel.textContent = "DECODING SIGNAL...";
-        
+        leaf.animate([
+            { transform: `translate(0, 0) rotate(0deg)`, opacity: 0 },
+            { opacity: 0.5, offset: 0.1 },
+            { transform: `translate(${Math.random() * 100 - 50}px, 110vh) rotate(360deg)`, opacity: 0 }
+        ], { duration: Math.random() * 4000 + 4000 }).onfinish = () => leaf.remove();
+    }
+    setInterval(createLeaf, 600);
+
+    // --- AUDIO HANDLING WITH FALLBACK ---
+    async function playCurrentTrack() {
+        trackLabel.textContent = "DECODING...";
+        trackLabel.style.color = "#e0ffe0";
+
         try {
+            // Attempt 1: High Quality Web Audio
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
             const response = await fetch(playlist[currentTrackIndex].src);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
             if (currentSource) currentSource.stop();
-            
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = audioBuffer;
             currentSource.connect(audioCtx.destination);
-            
-            currentSource.onended = () => {
-                if(isPlaying) {
-                    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-                    playCurrentTrack();
-                }
-            };
-
+            currentSource.onended = nextTrack;
             currentSource.start(0);
-            isPlaying = true;
-            playBtn.textContent = "STOP RADIO";
+            
             trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+            isPlaying = true;
         } catch (err) {
-            console.error(err);
-            trackLabel.textContent = "SIGNAL ERROR. TAP AGAIN.";
-            isPlaying = false;
+            console.warn("Decoding failed, trying fallback...", err);
+            
+            // Attempt 2: Standard HTML5 Fallback
+            backupAudio.src = playlist[currentTrackIndex].src;
+            backupAudio.play().then(() => {
+                trackLabel.textContent = "LIVE (COMPAT): " + playlist[currentTrackIndex].name;
+                isPlaying = true;
+            }).catch(e => {
+                trackLabel.textContent = "FORMAT NOT SUPPORTED";
+                trackLabel.style.color = "#ff5555";
+            });
+            backupAudio.onended = nextTrack;
+        }
+        playBtn.textContent = "STOP RADIO";
+    }
+
+    function nextTrack() {
+        if(isPlaying) {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            playCurrentTrack();
         }
     }
 
@@ -221,6 +256,7 @@
             playCurrentTrack();
         } else {
             if (currentSource) currentSource.stop();
+            backupAudio.pause();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
             trackLabel.textContent = "SIGNAL PAUSED";
@@ -235,7 +271,7 @@
         } else {
             alert("Need 1,000 Sap!");
         }
-    }
+    };
 
     updateUI();
     requestAnimationFrame(gameLoop);
