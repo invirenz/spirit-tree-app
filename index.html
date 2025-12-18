@@ -3,42 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spirit Tree Hub | Lofi Deity</title>
+    <title>Spirit Tree Hub | Lofi Shooter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --sakura: #ffb7c5;
             --green: #2ecc71;
             --rarity-god: #ffcc00;
-            --rarity-mythic: #ff4500;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(180deg, #a1c4fd 0%, #c2e9fb 100%);
+            background: #a1c4fd;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
         }
 
-        #entry-gate {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-        }
-
+        /* HUB STYLES */
         .hub-card {
             background: rgba(255, 255, 255, 0.9);
             padding: 25px; border-radius: 40px;
             width: 320px; text-align: center; z-index: 10;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             border: 2px solid white; backdrop-filter: blur(10px);
-        }
-
-        #tree-display { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin: 15px; }
-        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s ease; }
-        .foliage { 
-            position: absolute; background: var(--sakura); 
-            border-radius: 50%; filter: blur(2px); transition: 0.8s ease;
-            box-shadow: 0 0 20px var(--sakura);
         }
 
         .stat-grid { display: flex; justify-content: space-around; margin: 10px 0; font-weight: bold; }
@@ -50,7 +37,6 @@
             box-shadow: 0 4px 0 #27ae60; transition: 0.1s;
         }
         .btn:active { transform: translateY(2px); box-shadow: none; }
-        .btn-ad { background: #3498db; box-shadow: 0 4px 0 #2980b9; }
 
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -59,245 +45,194 @@
             color: white; text-align: center;
         }
 
-        #battle-canvas {
-            background: #111;
-            border: 3px solid var(--sakura);
-            border-radius: 15px;
-            touch-action: none;
+        /* 3D GAME UI */
+        #game-hud {
+            position: absolute; top: 20px; width: 100%; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
         }
+        .bar-container { width: 300px; height: 12px; background: #333; border: 2px solid white; position: relative; }
+        #boss-fill { width: 100%; height: 100%; background: #ff4757; }
+        #player-hp-fill { width: 100%; height: 100%; background: #2ecc71; }
+        #ammo-count { color: #00ffff; font-weight: bold; font-size: 20px; text-shadow: 2px 2px #000; }
 
-        .music-player {
-            position: absolute; bottom: 20px; width: 100%;
-            display: flex; flex-direction: column; align-items: center; z-index: 1000;
-        }
-        .player-bar {
-            background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 50px;
-            border: 2px solid var(--sakura); display: flex; align-items: center; gap: 15px;
-        }
-        input[type=range] { accent-color: var(--sakura); cursor: pointer; width: 80px; }
-        #ad-countdown { font-size: 2rem; color: var(--green); margin: 20px; }
+        #upgrade-menu { background: rgba(0,0,0,0.9); padding: 20px; border-radius: 20px; border: 2px solid var(--sakura); }
     </style>
 </head>
 <body>
 
-    <div id="entry-gate">
-        <h1 style="color: #2c3e50; letter-spacing: 2px;">SPIRIT TREE</h1>
-        <p style="color: #7f8c8d;">Featuring Music by <b>Lofi Deity</b></p>
-        <button class="btn" style="width: 200px;" onclick="enterHub()">ENTER HUB</button>
+    <div id="entry-gate" style="position:fixed; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <h1 style="color:#2c3e50">SPIRIT TREE</h1>
+        <button class="btn" style="width:200px" onclick="enterHub()">ENTER</button>
     </div>
 
-    <div class="hub-card">
-        <h2 style="margin:0; font-size: 1.1rem; color: #555;">SAKURA SPIRIT HUB</h2>
+    <div class="hub-card" id="main-hub">
+        <h2 style="margin:0;">SAKURA HUB</h2>
         <div class="stat-grid">
-            <div title="Petals">🌸 <span id="pts">0</span></div>
-            <div title="Real Trees">🌳 <span id="trees">0</span></div>
+            <div>🌸 <span id="pts">0</span></div>
+            <div>🛡️ LV.<span id="body-lv-txt">1</span></div>
+            <div>🔋 LV.<span id="head-lv-txt">1</span></div>
         </div>
-        <div id="tree-display"><div id="main-trunk" class="trunk"></div></div>
-        <button class="btn" onclick="openUI('summon')">✨ SUMMON SPIRIT (500 🌸)</button>
-        <button class="btn btn-ad" onclick="startAd()">📺 WATCH AD (Plant 1 Tree)</button>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button class="btn" style="background:#9b59b6; box-shadow: 0 4px 0 #8e44ad;" onclick="location.href='?mode=game'">🧹 GAME</button>
-            <button class="btn" style="background:#e74c3c; box-shadow: 0 4px 0 #c0392b;" onclick="startBattle()">⚔️ BATTLE</button>
-        </div>
+        <button class="btn" style="background:#9b59b6;" onclick="start3DGame()">⚔️ BOSS RAID</button>
+        <button class="btn" style="background:#3498db;" onclick="openUI('upgrades')">🧬 UPGRADES</button>
     </div>
 
-    <div id="summon-overlay" class="overlay">
-        <h2>SPIRIT GATE</h2>
-        <div id="summon-card" style="font-size: 3rem; margin: 30px; font-weight: bold;">?</div>
-        <button class="btn" style="width:200px" onclick="pullSpirit()">SPEND 500 🌸</button>
-        <button class="btn" style="width:200px; background:#555" onclick="closeUI()">BACK</button>
-    </div>
-
-    <div id="ad-overlay" class="overlay">
-        <h2>SPONSORED BY PARTNERS</h2>
-        <p>Your support pays for real tree planting.</p>
-        <div id="ad-countdown">15</div>
-        <div style="width: 250px; height: 150px; background: #222; border: 1px solid #444; display: flex; align-items: center; justify-content: center;">AD CONTENT AREA</div>
-    </div>
-
-    <div id="rpg-overlay" class="overlay">
-        <h2 style="margin: 10px 0;">ZEN HARVEST</h2>
-        <p style="font-size: 12px; margin-bottom: 10px;">Use <b>WASD</b> or <b>ARROWS</b> to harvest Orbs!</p>
-        <canvas id="battle-canvas" width="300" height="350"></canvas>
-        <div id="battle-stats" style="margin-top: 10px; font-weight: bold; color: var(--sakura);">
-            ZEN: <span id="zen-pts">0</span>%
-        </div>
-        <button class="btn" style="width:150px; background:#555; margin-top: 15px;" onclick="stopBattle()">EXIT</button>
-    </div>
-
-    <div class="music-player">
-        <div class="player-bar">
-            <div id="yt-player-box"></div>
-            <div style="color:white; text-align: center;">
-                <div style="font-size: 9px; color: var(--sakura);">NOW PLAYING</div>
-                <div style="font-size: 11px; font-weight: bold; width: 120px; white-space: nowrap; overflow: hidden;">HOLLOW PURPLE - LOFI DEITY</div>
+    <div id="upgrades-overlay" class="overlay">
+        <div id="upgrade-menu">
+            <h2>SPIRIT LAB</h2>
+            <div style="margin-bottom: 20px;">
+                <p>BODY (Head/Body) Level: <span id="b-lv">1</span></p>
+                <button class="btn" onclick="buyUpgrade('body')">UPGRADE HP (1000 🌸)</button>
+                <p>MIND (Ammo/Head) Level: <span id="h-lv">1</span></p>
+                <button class="btn" onclick="buyUpgrade('head')">UPGRADE AMMO (1000 🌸)</button>
             </div>
-            <input type="range" min="0" max="100" value="50" oninput="changeVol(this.value)">
+            <button class="btn" style="background:#555" onclick="closeUI()">BACK</button>
         </div>
+    </div>
+
+    <div id="3d-overlay" class="overlay" style="background: #000;">
+        <div id="game-hud">
+            <div style="font-size:12px">SPIRIT VOID DRAGON</div>
+            <div class="bar-container"><div id="boss-fill"></div></div>
+            <div style="font-size:12px">YOUR SOUL HP</div>
+            <div class="bar-container"><div id="player-hp-fill"></div></div>
+            <div id="ammo-count">AMMO: 20 / 20</div>
+        </div>
+        <div id="three-container" style="width:100%; height:100%;"></div>
+        <button class="btn" style="width:120px; position:absolute; bottom: 50px; background:#555" onclick="stop3D()">GIVE UP</button>
     </div>
 
 <script>
-    let player;
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(tag);
-
-    function onYouTubeIframeAPIReady() {
-        player = new YT.Player('yt-player-box', {
-            height: '0', width: '0', 
-            videoId: '8pxD0cAApWo',
-            playerVars: { 'autoplay': 1, 'loop': 1, 'playlist': '8pxD0cAApWo' },
-            events: { 'onReady': (e) => e.target.setVolume(50) }
-        });
-    }
-    function changeVol(v) { if(player) player.setVolume(v); }
-
-    let s = JSON.parse(localStorage.getItem('SpiritTree_V8')) || { p: 0, trees: 0, treeLv: 1, zen: 0 };
-
+    let s = JSON.parse(localStorage.getItem('SpiritTree_V9')) || { p: 500, bodyLv: 1, headLv: 1 };
+    
     function sync() {
-        document.getElementById('pts').innerText = Math.floor(s.p).toLocaleString();
-        document.getElementById('trees').innerText = s.trees;
-        const trunk = document.getElementById('main-trunk');
-        const lv = Math.min(s.treeLv, 100);
-        trunk.style.height = (25 + lv * 1.5) + 'px';
-        if(s.treeLv > 3) {
-            trunk.innerHTML = `<div class="foliage" style="width:${50+lv*2}px; height:${40+lv*1.5}px; top:-${25+lv}px; left:-${15+lv/2}px;"></div>`;
-        }
-        localStorage.setItem('SpiritTree_V8', JSON.stringify(s));
+        document.getElementById('pts').innerText = Math.floor(s.p);
+        document.getElementById('body-lv-txt').innerText = s.bodyLv;
+        document.getElementById('head-lv-txt').innerText = s.headLv;
+        document.getElementById('b-lv').innerText = s.bodyLv;
+        document.getElementById('h-lv').innerText = s.headLv;
+        localStorage.setItem('SpiritTree_V9', JSON.stringify(s));
     }
 
-    function enterHub() {
-        document.getElementById('entry-gate').style.display = 'none';
-        if(player) player.playVideo();
-        setInterval(() => { s.p += 0.3; sync(); }, 1000);
-    }
-
-    function startAd() {
-        const overlay = document.getElementById('ad-overlay');
-        const timerTxt = document.getElementById('ad-countdown');
-        overlay.style.display = 'flex';
-        let time = 15;
-        const cd = setInterval(() => {
-            time--;
-            timerTxt.innerText = time;
-            if(time <= 0) {
-                clearInterval(cd);
-                overlay.style.display = 'none';
-                s.trees++; s.p += 500; s.treeLv++;
-                sync();
-                alert("TREE PLANTED!");
-            }
-        }, 1000);
-    }
-
-    function pullSpirit() {
-        if(s.p < 500) return alert("Not enough petals!");
-        s.p -= 500;
-        const roll = Math.random() * 100;
-        let res = "RARE"; let col = "white";
-        if(roll < 0.5) { res = "GOD"; col = "var(--rarity-god)"; }
-        else if(roll < 3) { res = "MYTHIC"; col = "var(--rarity-mythic)"; }
-        document.getElementById('summon-card').innerText = res;
-        document.getElementById('summon-card').style.color = col;
-        sync();
-    }
-
-    // --- BATTLE GAME LOGIC ---
-    const canvas = document.getElementById('battle-canvas');
-    const ctx = canvas.getContext('2d');
-    let battleActive = false;
-    let playerPos = { x: 150, y: 175 };
-    let dots = [], ghosts = [];
-    let keys = {};
-
-    window.addEventListener('keydown', (e) => keys[e.code] = true);
-    window.addEventListener('keyup', (e) => keys[e.code] = false);
-
-    function startBattle() {
-        openUI('rpg');
-        battleActive = true;
-        s.zen = 0;
-        playerPos = { x: 150, y: 175 };
-        dots = [];
-        for(let i=0; i<15; i++) {
-            dots.push({ x: Math.random()*260+20, y: Math.random()*310+20, collected: false });
-        }
-        ghosts = [
-            { x: 10, y: 10, vx: 2, vy: 2 },
-            { x: 260, y: 310, vx: -2, vy: -2 }
-        ];
-        requestAnimationFrame(battleLoop);
-    }
-
-    function battleLoop() {
-        if(!battleActive) return;
-        const speed = 4;
-        if (keys['KeyW'] || keys['ArrowUp']) playerPos.y -= speed;
-        if (keys['KeyS'] || keys['ArrowDown']) playerPos.y += speed;
-        if (keys['KeyA'] || keys['ArrowLeft']) playerPos.x -= speed;
-        if (keys['KeyD'] || keys['ArrowRight']) playerPos.x += speed;
-
-        playerPos.x = Math.max(12, Math.min(288, playerPos.x));
-        playerPos.y = Math.max(12, Math.min(338, playerPos.y));
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = "24px Arial";
-        ctx.fillText("✨", playerPos.x - 12, playerPos.y + 8);
-
-        dots.forEach(dot => {
-            if(!dot.collected) {
-                ctx.fillStyle = "cyan";
-                ctx.beginPath(); ctx.arc(dot.x, dot.y, 4, 0, Math.PI*2); ctx.fill();
-                if(Math.hypot(playerPos.x - dot.x, playerPos.y - dot.y) < 15) {
-                    dot.collected = true;
-                    s.zen = Math.min(100, s.zen + 7);
-                    document.getElementById('zen-pts').innerText = s.zen;
-                }
-            }
-        });
-
-        ghosts.forEach(g => {
-            g.x += g.vx; g.y += g.vy;
-            if(g.x < 0 || g.x > 270) g.vx *= -1;
-            if(g.y < 0 || g.y > 320) g.vy *= -1;
-            ctx.fillText("👹", g.x, g.y + 20);
-            if(Math.hypot(playerPos.x - (g.x + 12), playerPos.y - (g.y + 12)) < 18) {
-                battleActive = false; alert("Exorcised! Battle Lost."); closeUI();
-            }
-        });
-
-        if(dots.every(d => d.collected)) {
-            battleActive = false; s.p += 1500; sync();
-            alert("ZEN HARVEST COMPLETE! +1500 🌸"); closeUI();
-        } else {
-            requestAnimationFrame(battleLoop);
-        }
-    }
-
-    function stopBattle() { battleActive = false; closeUI(); }
+    function enterHub() { document.getElementById('entry-gate').style.display = 'none'; sync(); }
     function openUI(id) { document.getElementById(id + '-overlay').style.display = 'flex'; }
     function closeUI() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
 
-    // INITIALIZE
-    if(new URLSearchParams(window.location.search).get('mode') === 'game') {
-        document.body.innerHTML = `<div onclick="jump()" style="width:100vw; height:100vh; background:#3498db; position:relative;">
-            <div id="sc" style="position:absolute; width:100%; text-align:center; top:50px; color:white; font-size:60px; font-weight:bold;">0</div>
-            <div id="pl" style="position:absolute; left:50px; font-size:50px;">🧹</div>
-        </div>`;
-        let py=300, pv=0, score=0;
-        window.jump = () => pv = -9;
-        function loop() {
-            pv += 0.4; py += pv; document.getElementById('pl').style.top = py + 'px';
-            if(py > window.innerHeight || py < -100) {
-                let d = JSON.parse(localStorage.getItem('SpiritTree_V8'));
-                d.p += Math.floor(score/10); localStorage.setItem('SpiritTree_V8', JSON.stringify(d));
-                window.location.href = window.location.origin + window.location.pathname; return;
-            }
-            score++; document.getElementById('sc').innerText = Math.floor(score/10);
-            requestAnimationFrame(loop);
+    function buyUpgrade(type) {
+        if(s.p >= 1000) {
+            s.p -= 1000;
+            if(type === 'body') s.bodyLv++;
+            else s.headLv++;
+            sync();
+        } else { alert("Not enough petals!"); }
+    }
+
+    // --- 3D BOSS ENGINE ---
+    let scene, camera, renderer, p3d, b3d, bullets = [], bossProjectiles = [];
+    let gameActive = false, bHp = 100, pHp = 100, ammo = 20, isRecharging = false;
+    let keys = {};
+
+    function init3D() {
+        scene = new THREE.Scene(); scene.background = new THREE.Color(0x050510);
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('three-container').appendChild(renderer.domElement);
+
+        p3d = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshPhongMaterial({ color: 0x00ffff, emissive: 0x00ffff }));
+        p3d.position.y = 0.5; scene.add(p3d);
+
+        b3d = new THREE.Mesh(new THREE.TorusKnotGeometry(1.5, 0.5, 100, 16), new THREE.MeshPhongMaterial({ color: 0xff4500, emissive: 0x550000 }));
+        b3d.position.set(0, 3, -20); scene.add(b3d);
+
+        scene.add(new THREE.AmbientLight(0x404040, 2));
+        let light = new THREE.PointLight(0xffffff, 2, 100); light.position.set(0, 10, 0); scene.add(light);
+
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+        window.addEventListener('mousedown', fireBeam);
+    }
+
+    function fireBeam() {
+        if(!gameActive || ammo <= 0 || isRecharging) return;
+        ammo--;
+        updateHUD();
+        const beam = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+        beam.position.copy(p3d.position);
+        beam.userData.v = new THREE.Vector3(0, 0, -1).multiplyScalar(0.8);
+        scene.add(beam); bullets.push(beam);
+
+        if(ammo <= 0) {
+            isRecharging = true;
+            document.getElementById('ammo-count').innerText = "RECHARGING...";
+            setTimeout(() => {
+                ammo = 20 + (s.headLv * 5);
+                isRecharging = false;
+                updateHUD();
+            }, 2000);
         }
-        loop();
-    } else { sync(); }
+    }
+
+    function updateHUD() {
+        document.getElementById('ammo-count').innerText = `AMMO: ${ammo} / ${20 + (s.headLv * 5)}`;
+        document.getElementById('boss-fill').style.width = bHp + "%";
+        document.getElementById('player-hp-fill').style.width = (pHp / (100 + s.bodyLv * 20) * 100) + "%";
+    }
+
+    function start3DGame() {
+        openUI('3d'); gameActive = true; 
+        bHp = 100; pHp = 100 + (s.bodyLv * 20); ammo = 20 + (s.headLv * 5);
+        if(!scene) init3D();
+        animate3D();
+        updateHUD();
+    }
+
+    function stop3D() { gameActive = false; closeUI(); }
+
+    function animate3D() {
+        if(!gameActive) return;
+        requestAnimationFrame(animate3D);
+
+        // Movement
+        if(keys['KeyW']) p3d.position.z -= 0.25;
+        if(keys['KeyS']) p3d.position.z += 0.25;
+        if(keys['KeyA']) p3d.position.x -= 0.25;
+        if(keys['KeyD']) p3d.position.x += 0.25;
+
+        // Boss AI
+        b3d.position.x = Math.sin(Date.now() * 0.001) * 10;
+        b3d.rotation.y += 0.02;
+
+        if(Math.random() < 0.06) {
+            const bp = new THREE.Mesh(new THREE.OctahedronGeometry(0.5), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+            bp.position.copy(b3d.position);
+            let dir = new THREE.Vector3(p3d.position.x - b3d.position.x, 0, p3d.position.z - b3d.position.z).normalize();
+            bp.userData.v = dir.multiplyScalar(0.3);
+            scene.add(bp); bossProjectiles.push(bp);
+        }
+
+        // Projectile Logic
+        bullets.forEach((b, i) => {
+            b.position.add(b.userData.v);
+            if(b.position.distanceTo(b3d.position) < 2.5) {
+                bHp -= 1; scene.remove(b); bullets.splice(i, 1);
+                updateHUD();
+                if(bHp <= 0) { s.p += 5000; sync(); alert("BOSS EXTERMINATED!"); stop3D(); }
+            }
+        });
+
+        bossProjectiles.forEach((p, i) => {
+            p.position.add(p.userData.v);
+            if(p.position.distanceTo(p3d.position) < 1.2) {
+                pHp -= 10; scene.remove(p); bossProjectiles.splice(i, 1);
+                updateHUD();
+                if(pHp <= 0) { alert("YOUR SOUL CRACKED!"); stop3D(); }
+            }
+        });
+
+        camera.position.lerp(new THREE.Vector3(p3d.position.x, p3d.position.y + 6, p3d.position.z + 12), 0.1);
+        camera.lookAt(p3d.position);
+        renderer.render(scene, camera);
+    }
 </script>
 </body>
 </html>
