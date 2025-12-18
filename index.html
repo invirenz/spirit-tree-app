@@ -173,20 +173,20 @@
         trackLabel.textContent = `NOW PLAYING: ${playlist[i].name}`;
     }
 
-    playBtn.onclick = async () => {
-        try {
-            if (!isPlaying) {
-                await audio.play();
-                playBtn.textContent = 'Pause Radio';
-            } else {
-                audio.pause();
-                playBtn.textContent = 'Play Radio';
-            }
-            isPlaying = !isPlaying;
-        } catch (e) {
-            console.warn("Audio blocked by browser. Click again.");
+  playBtn.onclick = async () => {
+    try {
+        if (!isPlaying) {
+            await audio.play();
+            playBtn.textContent = 'Pause Radio';
+        } else {
+            audio.pause();
+            playBtn.textContent = 'Play Radio';
         }
-    };
+        isPlaying = !isPlaying;
+    } catch (e) {
+        console.error("Playback failed:", e);
+    }
+};
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
