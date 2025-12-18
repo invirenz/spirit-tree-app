@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spirit Tree | Indie Radio</title>
     <style>
- body {
+        body {
             background-color: #050a05;
             background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
             color: #e0ffe0;
@@ -100,103 +100,128 @@
 </head>
 <body>
 
-    <div id="ui-container">
-        <div class="stats">
-            SAP: <span id="sap-count">0</span><br>
-            TREES PLANTED: <span id="tree-count">0</span>
-        </div>
-
-        <div id="spirit-display">
-            <div class="aura"></div>
-            <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
-        </div>
-
-        <div class="music-player">
-            <button class="play-btn" onclick="toggleMusic()">Play Radio</button>
-            <p id="track-name" style="font-size: 0.7rem; opacity: 0.7; margin-top: 10px;">Music Off</p>
-        </div>
-
-        <button class="plant-btn" onclick="plantRealTree()">Plant Real Tree (1,000 Sap)</button>
+<div id="ui-container">
+    <div class="stats">
+        SAP: <span id="sap-count">0</span><br>
+        TREES PLANTED: <span id="tree-count">0</span>
     </div>
 
-    <audio id="bg-audio"></audio>
+    <div id="spirit-display">
+        <div class="aura"></div>
+        <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
+    </div>
 
-    <script>
-        const playlist = [
-            { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
-            { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
-            { name: "Half of Me", src: "assets/Half%20of%20Me_mastered.mp3" },
-            { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
-        ];
+    <div class="music-player">
+        <button id="play-btn" class="play-btn" onclick="toggleMusic()">Play Radio</button>
+        <p id="track-name" style="font-size: 0.7rem; opacity: 0.7; margin-top: 10px;">Music Off</p>
+    </div>
 
-        let currentTrackIndex = 0;
-        let isPlaying = false;
-        let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0, lastTick: Date.now() };
+    <button class="plant-btn" onclick="plantRealTree()">Plant Real Tree (1,000 Sap)</button>
+</div>
 
-        const audio = document.getElementById('bg-audio');
-        const trackLabel = document.getElementById('track-name');
+<audio id="bg-audio"></audio>
 
-        function loadTrack(index) {
-            audio.src = playlist[index].src;
-            trackLabel.innerText = `NOW PLAYING: ${playlist[index].name}`;
-        }
+<script>
+    const playlist = [
+        { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
+        { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
+        { name: "Half of Me", src: "assets/Half%20of%20Me_mastered.mp3" },
+        { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
+    ];
 
-        loadTrack(currentTrackIndex);
+    let currentTrackIndex = 0;
+    let isPlaying = false;
 
-        function toggleMusic() {
-            if (isPlaying) {
-                audio.pause();
-                isPlaying = false;
-            } else {
-                audio.play();
-                isPlaying = true;
-            }
-        }
+    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || {
+        sap: 0,
+        totalPlanted: 0,
+        lastTick: Date.now()
+    };
 
-        audio.onended = () => {
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-            loadTrack(currentTrackIndex);
+    const audio = document.getElementById('bg-audio');
+    const trackLabel = document.getElementById('track-name');
+    const playBtn = document.getElementById('play-btn');
+    const sapLabel = document.getElementById('sap-count');
+    const treeLabel = document.getElementById('tree-count');
+
+    function syncUI() {
+        sapLabel.innerText = Math.floor(state.sap);
+        treeLabel.innerText = state.totalPlanted;
+        localStorage.setItem('spiritTreeSave', JSON.stringify(state));
+    }
+
+    function loadTrack(index) {
+        audio.src = playlist[index].src;
+        trackLabel.innerText = `NOW PLAYING: ${playlist[index].name}`;
+    }
+
+    loadTrack(currentTrackIndex);
+    syncUI();
+
+    function toggleMusic() {
+        if (isPlaying) {
+            audio.pause();
+            playBtn.innerText = 'Play Radio';
+        } else {
             audio.play();
-        };
+            playBtn.innerText = 'Pause Radio';
+        }
+        isPlaying = !isPlaying;
+    }
 
-        function tick() {
-            const now = Date.now();
-            if (now - state.lastTick >= 1000) {
-                state.sap += 1;
-                state.lastTick = now;
-                document.getElementById('sap-count').innerText = Math.floor(state.sap);
-                document.getElementById('tree-count').innerText = state.totalPlanted;
-                localStorage.setItem('spiritTreeSave', JSON.stringify(state));
-            }
-            const treeArt = document.getElementById('tree-art');
-            if (treeArt) {
-                const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
-                treeArt.style.transform = `translateY(${Math.sin(now/1500)*10}px) scale(${scale})`;
-            }
-            requestAnimationFrame(tick);
+    audio.onended = () => {
+        currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+        loadTrack(currentTrackIndex);
+        audio.play();
+    };
+
+    function tick() {
+        const now = Date.now();
+
+        if (now - state.lastTick >= 1000) {
+            state.sap += 1;
+            state.lastTick = now;
+            syncUI();
         }
 
-        function createParticle() {
-            const leaf = document.createElement('div');
-            leaf.className = 'leaf';
-            leaf.style.left = Math.random() * 100 + 'vw';
-            const size = Math.random() * 5 + 3;
-            leaf.style.width = size + 'px'; leaf.style.height = size + 'px';
-            document.body.appendChild(leaf);
-            leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], 
-            { duration: Math.random() * 3000 + 4000 }).onfinish = () => leaf.remove();
-        }
-        setInterval(createParticle, 1000);
-
-        function plantRealTree() {
-            if (state.sap >= 1000) {
-                state.sap -= 1000;
-                state.totalPlanted += 1;
-                alert("Tree planted!");
-            }
+        const treeArt = document.getElementById('tree-art');
+        if (treeArt) {
+            const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
+            treeArt.style.transform =
+                `translateY(${Math.sin(now / 1500) * 10}px) scale(${scale})`;
         }
 
-        tick();
-    </script>
+        requestAnimationFrame(tick);
+    }
+
+    function createParticle() {
+        const leaf = document.createElement('div');
+        leaf.className = 'leaf';
+        leaf.style.left = Math.random() * 100 + 'vw';
+        const size = Math.random() * 5 + 3;
+        leaf.style.width = size + 'px';
+        leaf.style.height = size + 'px';
+        document.body.appendChild(leaf);
+
+        leaf.animate(
+            [{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }],
+            { duration: Math.random() * 3000 + 4000 }
+        ).onfinish = () => leaf.remove();
+    }
+
+    setInterval(createParticle, 1000);
+
+    function plantRealTree() {
+        if (state.sap >= 1000) {
+            state.sap -= 1000;
+            state.totalPlanted += 1;
+            syncUI();
+            alert("Tree planted!");
+        }
+    }
+
+    tick();
+</script>
+
 </body>
 </html>
