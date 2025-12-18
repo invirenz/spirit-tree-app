@@ -80,11 +80,9 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             transition: 0.2s;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
         }
-
-        .play-btn:active { transform: scale(0.95); }
 
         .plant-btn {
             background: none;
@@ -95,14 +93,6 @@
             cursor: pointer;
             margin-top: 25px;
             font-size: 0.9rem;
-        }
-
-        #track-name {
-            font-size: 0.7rem;
-            opacity: 0.8;
-            margin-top: 15px;
-            letter-spacing: 1px;
-            min-height: 1.2em;
         }
 
         .leaf {
@@ -117,6 +107,13 @@
         @keyframes pulseAura {
             0% { opacity: 0.2; transform: scale(0.9); }
             100% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        #track-name {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 15px;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -134,8 +131,8 @@
     </div>
 
     <div class="music-player">
-        <button id="play-btn" class="play-btn">ACTIVATE RADIO</button>
-        <p id="track-name">OFFLINE</p>
+        <button id="play-btn" class="play-btn">START RADIO</button>
+        <p id="track-name">SIGNAL READY</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
@@ -147,17 +144,15 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // Relative path used here (no starting slash)
+    // --- CRITICAL FIX: Filenames must match exactly including spaces ---
     const playlist = [
-        { name: "After Light", src: "assets/After_Light_mastered.mp3" },
-        { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
-        { name: "Half of Me", src: "assets/Half_of_Me_mastered.mp3" },
+        { name: "After Light", src: "assets/After Light mastered.mp3" }, 
+        { name: "Get Away", src: "assets/Get Away mastered.mp3" },
+        { name: "Half of Me", src: "assets/Half of Me mastered.mp3" },
         { name: "W.D.I.D.", src: "assets/WDID.mp3" }
     ];
 
     const audio = new Audio();
-    audio.crossOrigin = "anonymous";
-
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
@@ -183,35 +178,43 @@
         requestAnimationFrame(gameLoop);
     }
 
-    async function startRadio() {
-        trackLabel.textContent = "ATTEMPTING CONNECTION...";
-
-        // Force reload to help browser recognition
-        if (!audio.src || audio.src === "" || audio.paused) {
+    async function toggleRadio() {
+        // If first play, set the source
+        if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
             audio.src = playlist[currentTrackIndex].src;
-            audio.load();
         }
 
-        try {
-            await audio.play();
-            isPlaying = true;
-            playBtn.textContent = "PAUSE RADIO";
-            trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
-            trackLabel.style.color = "#00ffff";
-        } catch (err) {
-            console.error("Audio Load Failed:", err);
-            trackLabel.textContent = "404 ERROR: CHECK ASSETS FOLDER";
-            trackLabel.style.color = "#ff4444";
+        if (audio.paused) {
+            try {
+                await audio.play();
+                isPlaying = true;
+                playBtn.textContent = "STOP RADIO";
+                trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+                trackLabel.style.color = "#00ffff";
+            } catch (e) {
+                trackLabel.textContent = "TAP AGAIN TO SYNC";
+            }
+        } else {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = "START RADIO";
+            trackLabel.textContent = "SIGNAL PAUSED";
         }
     }
 
-    playBtn.addEventListener('click', startRadio);
+    playBtn.onclick = toggleRadio;
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         audio.src = playlist[currentTrackIndex].src;
         audio.play();
         trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+    };
+
+    // Error catching to show us if the filename is still wrong
+    audio.onerror = () => {
+        trackLabel.textContent = "ERROR: Cannot find " + playlist[currentTrackIndex].src;
+        trackLabel.style.color = "#ff5555";
     };
 
     document.getElementById('plant-btn').onclick = async () => {
@@ -230,7 +233,8 @@
         leaf.className = 'leaf';
         leaf.style.left = (Math.random() * 100) + 'vw';
         const size = (Math.random() * 5 + 2) + 'px';
-        leaf.style.width = size; leaf.style.height = size;
+        leaf.style.width = size;
+        leaf.style.height = size;
         document.body.appendChild(leaf);
         leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], { duration: 6000 }).onfinish = () => leaf.remove();
     }
