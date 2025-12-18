@@ -1,0 +1,21 @@
+{
+  "name": "spirit-tree-app",
+  "version": "1.0.0",
+  "description": "Grow your tree, heal the world.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "keywords": [
+    "tree",
+    "spirit",
+    "lofi",
+    "radio",
+    "environmental"
+  ],
+  "author": "Invirenz",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.0"
+  }
+}
