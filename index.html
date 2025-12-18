@@ -18,12 +18,14 @@
             margin: 0;
             overflow: hidden;
             touch-action: manipulation;
+            cursor: pointer; /* Shows user they can click anywhere */
         }
 
         #ui-container {
             position: relative;
             z-index: 100;
             text-align: center;
+            pointer-events: none;
         }
 
         .stats {
@@ -46,7 +48,6 @@
             height: auto;
             z-index: 2;
             filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
-            pointer-events: none;
         }
 
         .aura {
@@ -57,43 +58,25 @@
             border-radius: 50%;
             z-index: 1;
             animation: pulseAura 4s infinite alternate ease-in-out;
-            pointer-events: none;
-        }
-
-        .music-player {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            min-width: 280px;
-        }
-
-        .play-btn {
-            background: #00ffff;
-            border: none;
-            color: #050a05;
-            padding: 18px 45px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-            display: inline-block;
         }
 
         .plant-btn {
             background: none;
             border: 1px solid #00ffff;
             color: #00ffff;
-            padding: 12px 30px;
-            border-radius: 30px;
+            padding: 15px 40px;
+            border-radius: 40px;
             cursor: pointer;
-            margin-top: 25px;
-            font-size: 0.9rem;
+            margin-top: 40px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: auto; /* Allows button to be clicked */
+            transition: 0.3s;
+        }
+
+        .plant-btn:active {
+            background: rgba(0, 255, 255, 0.2);
         }
 
         .leaf {
@@ -105,11 +88,17 @@
             z-index: 0;
         }
 
-        #track-name {
+        @keyframes pulseAura {
+            0% { opacity: 0.2; transform: scale(0.9); }
+            100% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        #status-text {
+            position: fixed;
+            bottom: 20px;
             font-size: 0.7rem;
-            opacity: 0.8;
-            margin-top: 15px;
-            color: #ff5555; /* Changed to red to highlight errors */
+            letter-spacing: 2px;
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -126,13 +115,10 @@
         <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
     </div>
 
-    <div class="music-player">
-        <button id="play-btn" class="play-btn">START RADIO</button>
-        <p id="track-name">READY</p>
-    </div>
-
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
+
+<div id="status-text">TAP ANYWHERE TO START RADIO</div>
 
 <script>
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
@@ -140,7 +126,6 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // We use absolute paths (starting with /) to ensure Vercel finds the assets folder
     const playlist = [
         { name: "After Light", src: "/assets/After_Light_mastered.mp3" },
         { name: "Get Away", src: "/assets/Get_Away_mastered.mp3" },
@@ -149,12 +134,9 @@
     ];
 
     const audio = new Audio();
-    
-    const playBtn = document.getElementById('play-btn');
-    const trackLabel = document.getElementById('track-name');
+    const statusLabel = document.getElementById('status-text');
     const sapLabel = document.getElementById('sap-count');
     const treeLabel = document.getElementById('tree-count');
-    const plantBtn = document.getElementById('plant-btn');
     const treeArt = document.getElementById('tree-art');
 
     function updateUI() {
@@ -176,49 +158,34 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- DEBUGGING AUDIO ---
-    audio.onerror = () => {
-        const errors = ["Unknown", "Aborted", "Network", "Decode", "Source Not Supported"];
-        trackLabel.textContent = "FILE ERROR: " + (errors[audio.error.code] || "Unknown");
-        trackLabel.style.color = "#ff5555";
-    };
+    // --- AUTO-PLAY ON FIRST CLICK ---
+    async function initAudio() {
+        if (isPlaying) return;
 
-    async function toggleRadio() {
-        trackLabel.style.color = "#00ffff";
-        
-        if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
-            audio.src = playlist[currentTrackIndex].src;
-            audio.load();
-        }
-
-        if (audio.paused) {
-            try {
-                await audio.play();
-                isPlaying = true;
-                playBtn.textContent = "STOP RADIO";
-                trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
-            } catch (e) {
-                trackLabel.textContent = "BROWSER BLOCKED: CLICK AGAIN";
-                console.log(e);
-            }
-        } else {
-            audio.pause();
-            isPlaying = false;
-            playBtn.textContent = "START RADIO";
-            trackLabel.textContent = "PAUSED";
+        audio.src = playlist[currentTrackIndex].src;
+        try {
+            await audio.play();
+            isPlaying = true;
+            statusLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
+            // Once audio starts, we don't need the global click listener anymore
+            document.body.removeEventListener('click', initAudio);
+        } catch (e) {
+            statusLabel.textContent = "TAP AGAIN TO SYNC AUDIO";
         }
     }
 
-    playBtn.onclick = toggleRadio;
+    // This listens for a click anywhere on the screen
+    document.body.addEventListener('click', initAudio);
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         audio.src = playlist[currentTrackIndex].src;
         audio.play();
-        trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+        statusLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
     };
 
-    plantBtn.onclick = async () => {
+    document.getElementById('plant-btn').onclick = async (e) => {
+        e.stopPropagation(); // Prevents the global "play" trigger from firing twice
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
@@ -237,8 +204,7 @@
         leaf.style.width = size;
         leaf.style.height = size;
         document.body.appendChild(leaf);
-        leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], 
-        { duration: 6000 }).onfinish = () => leaf.remove();
+        leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], { duration: 6000 }).onfinish = () => leaf.remove();
     }
 
     setInterval(createLeaf, 2000);
