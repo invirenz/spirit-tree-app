@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spirit Tree | Grow & Plant</title>
     <style>
-        /* 1. THE ZEN GARDEN LOOK */
+        /* 1. THE CINEMATIC GHIBLI LOOK */
         body {
-            background: radial-gradient(circle, #1a2a1a 0%, #050a05 100%);
+            background: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
             color: #e0ffe0;
             font-family: 'Segoe UI', sans-serif;
             display: flex;
@@ -16,7 +16,7 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden; /* Stops screen shaking from leaves */
+            overflow: hidden;
         }
 
         #ui-container {
@@ -28,25 +28,43 @@
             font-size: 1.2rem;
             letter-spacing: 2px;
             margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(100, 255, 100, 0.5);
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
         }
 
-        /* 2. THE TREE ART STYLING */
+        /* 2. THE SPIRIT ORB & AURA STYLING */
+        #spirit-display {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
         #tree-art {
-            width: 250px;
+            width: 260px;
             height: auto;
-            transition: transform 0.3s ease;
-            filter: drop-shadow(0 0 15px rgba(100, 255, 100, 0.4));
+            z-index: 2;
+            /* Soft bloom effect to make it look cinematic */
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7)) brightness(1.1);
             cursor: pointer;
-            margin: 20px 0;
+        }
+
+        .aura {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulseAura 4s infinite alternate ease-in-out;
         }
 
         /* 3. THE GLOWING BUTTON */
         .plant-btn {
             background: none;
-            border: 2px solid #67e667;
-            color: #67e667;
-            padding: 10px 25px;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
             font-size: 1rem;
             border-radius: 30px;
             cursor: pointer;
@@ -54,25 +72,38 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 20px;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
 
         .plant-btn:hover {
-            background: #67e667;
+            background: #00ffff;
             color: #050a05;
-            box-shadow: 0 0 20px rgba(103, 230, 103, 0.6);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
         }
 
-        /* 4. LEAF STYLE */
+        /* 4. SPIRIT EMBER STYLE (Formerly Leaves) */
         .leaf {
             position: absolute;
             top: -20px;
-            width: 10px;
-            height: 10px;
-            background: #67e667;
-            border-radius: 2px 10px 2px 10px;
+            width: 8px;
+            height: 8px;
+            background: #00ffff;
+            border-radius: 50%; /* Circle shape for spirits */
             opacity: 0.6;
             pointer-events: none;
             z-index: 1;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        /* ANIMATIONS */
+        @keyframes pulseAura {
+            0% { opacity: 0.2; transform: scale(0.85); }
+            100% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
     </style>
 </head>
@@ -84,13 +115,14 @@
             TREES PLANTED: <span id="tree-count">0</span>
         </div>
 
-        <div id="tree-display">
-            <img id="tree-art" src="https://cdn-icons-png.flaticon.com/512/616/616412.png" alt="Spirit Tree">
+        <div id="spirit-display">
+            <div class="aura"></div>
+            <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
         </div>
 
         <button class="plant-btn" onclick="plantRealTree()">Plant Real Tree (1,000 Sap)</button>
         
-        <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 40px;">Music Playing: Your Lofi Beats</p>
+        <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 40px;">Current State: Spirit Core</p>
     </div>
 
     <script>
@@ -103,7 +135,7 @@
             lastTick: Date.now()
         };
 
-        // 2. THE AFK ENGINE (1 Sap per second)
+        // 2. THE AFK ENGINE
         function tick() {
             const now = Date.now();
             if (now - state.lastTick >= 1000) {
@@ -113,10 +145,10 @@
                 checkEvolution();
             }
             
-            // Subtle "Breathing" animation for the tree
+            // Magical floating animation
             const treeArt = document.getElementById('tree-art');
             if (treeArt) {
-                treeArt.style.transform = `scale(${1 + (Math.sin(now / 1000) * 0.03)})`;
+                treeArt.style.transform = `translateY(${Math.sin(now / 1000) * 15}px) rotate(${Math.sin(now / 2000) * 2}deg)`;
             }
 
             requestAnimationFrame(tick);
@@ -133,33 +165,33 @@
         function checkEvolution() {
             if (state.sap >= 5000 && state.currentLevel === 0) {
                 state.currentLevel = 1;
-                alert("Your tree is evolving! Keep an eye out for new growth.");
+                alert("Your Spirit Orb is vibrating... it's ready to evolve soon!");
             }
         }
 
-        // 5. LEAF SYSTEM
+        // 5. SPIRIT EMBER SYSTEM
         function createLeaf() {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
             leaf.style.left = Math.random() * 100 + 'vw';
-            const size = Math.random() * 8 + 5;
+            const size = Math.random() * 6 + 4;
             leaf.style.width = size + 'px';
             leaf.style.height = size + 'px';
             document.body.appendChild(leaf);
 
             const animation = leaf.animate([
-                { transform: `translateY(0) rotate(0deg)`, left: leaf.style.left },
-                { transform: `translateY(110vh) rotate(360deg)`, left: (parseFloat(leaf.style.left) + 10) + 'vw' }
+                { transform: `translateY(0) scale(1)`, opacity: 0.6 },
+                { transform: `translateY(110vh) scale(0)`, opacity: 0 }
             ], {
-                duration: Math.random() * 5000 + 5000,
+                duration: Math.random() * 6000 + 4000,
                 easing: 'linear'
             });
 
             animation.onfinish = () => leaf.remove();
         }
-        setInterval(createLeaf, 1000);
+        setInterval(createLeaf, 800);
 
-        // 6. PLANTING LOGIC (Connects to your api/plant.js)
+        // 6. PLANTING LOGIC
         async function plantRealTree() {
             if (state.sap >= 1000) {
                 try {
@@ -175,19 +207,18 @@
                         state.sap -= 1000;
                         state.totalPlanted += 1;
                         updateUI();
-                        alert("Success! A real tree is being planted.");
+                        alert("Success! The spirit world thanks you. A real tree is being planted.");
                     } else {
-                        alert("Error: " + result.error);
+                        alert("API Error: " + result.error);
                     }
                 } catch (err) {
-                    alert("The tree server is sleeping. Make sure your API key is in Vercel!");
+                    alert("Connection failed. Make sure your API key is in Vercel Settings!");
                 }
             } else {
-                alert("You need 1,000 Sap! Keep the app open to earn more.");
+                alert("The orb needs 1,000 Sap to manifest a tree!");
             }
         }
 
-        // START
         tick();
     </script>
 </body>
