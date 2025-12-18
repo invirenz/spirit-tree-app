@@ -152,7 +152,7 @@
 
     function loadTrack(index) {
         audio.src = playlist[index].src;
-        trackLabel.innerText = `NOW PLAYING: ${playlist[index].name}`;
+        trackLabel.innerText = "NOW PLAYING: " + playlist[index].name;
     }
 
     loadTrack(currentTrackIndex);
@@ -177,7 +177,6 @@
 
     function tick() {
         const now = Date.now();
-
         if (now - state.lastTick >= 1000) {
             state.sap += 1;
             state.lastTick = now;
@@ -187,10 +186,8 @@
         const treeArt = document.getElementById('tree-art');
         if (treeArt) {
             const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
-            treeArt.style.transform =
-                `translateY(${Math.sin(now / 1500) * 10}px) scale(${scale})`;
+            treeArt.style.transform = `translateY(${Math.sin(now / 1500) * 10}px) scale(${scale})`;
         }
-
         requestAnimationFrame(tick);
     }
 
@@ -222,6 +219,5 @@
 
     tick();
 </script>
-
 </body>
 </html>
