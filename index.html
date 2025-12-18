@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | Cozy Hub</title>
+    <title>Sakura Spirit | RPG Hub</title>
     <style>
         :root {
             --sakura-pink: #ffb7c5;
             --ui-accent: #5a8a58;
-            --trunk-brown: #5d4037;
-            --soot-black: #333;
+            --rpg-red: #e74c3c;
+            --rpg-blue: #3498db;
         }
 
         body {
@@ -26,223 +26,78 @@
             position: relative;
         }
 
-        /* Navigation Bar */
-        #nav-bar {
-            position: absolute;
-            top: 20px;
-            display: flex;
-            gap: 15px;
-            z-index: 1000;
-        }
+        /* Navigation */
+        #nav-bar { position: absolute; top: 20px; display: flex; gap: 10px; z-index: 1000; }
+        .nav-btn { background: white; border: 1px solid #ddd; padding: 10px 15px; border-radius: 25px; cursor: pointer; font-weight: bold; }
 
-        .nav-btn {
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            backdrop-filter: blur(5px);
-            transition: 0.3s;
-        }
-        .nav-btn:hover { background: rgba(255, 255, 255, 0.5); }
-
-        /* Screens */
-        .screen { display: none; text-align: center; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; }
+        /* Screen Management */
+        .screen { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; }
         .active { display: flex; }
 
-        /* --- TREE SCREEN --- */
-        #ui-container {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 30px;
-            border-radius: 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            width: 320px;
+        /* --- RPG BATTLE UI --- */
+        #rpg-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 20px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        #spirit-stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 20px; }
-        .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; }
-        .sprout { width: 12px; height: 60px; background: #aed581; border-radius: 5px; position: relative; }
-        .full-tree { width: 22px; height: 80px; background: var(--trunk-brown); position: relative; }
-        .canopy { width: 140px; height: 120px; background: var(--sakura-pink); border-radius: 50%; position: absolute; top: -100px; left: -59px; filter: blur(1px); animation: float 4s infinite ease-in-out; }
+        .battle-stage {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 150px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
 
-        /* --- BAKERY GAME SCREEN --- */
-        #game-canvas-container { position: relative; width: 100%; height: 100%; background: #8ec5fc; overflow: hidden; cursor: pointer; }
-        #player { position: absolute; width: 50px; height: 50px; font-size: 40px; left: 50px; top: 50%; transition: transform 0.1s; z-index: 10; }
-        .obstacle { position: absolute; background: white; border-radius: 50px; filter: blur(5px); opacity: 0.8; }
-        #score-display { position: absolute; top: 80px; font-size: 2rem; color: white; font-weight: bold; width: 100%; text-align: center; z-index: 20; }
+        .entity { font-size: 50px; position: relative; transition: 0.3s; }
+        .hp-bar { width: 100px; height: 10px; background: #ddd; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .hp-fill { height: 100%; background: var(--ui-accent); width: 100%; transition: 0.3s; }
+        
+        .rpg-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .rpg-btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; }
+        .atk-btn { background: var(--rpg-red); }
+        .train-btn { background: var(--rpg-blue); }
 
-        /* UI Elements */
-        .plant-btn { background: var(--ui-accent); border: none; color: white; padding: 15px; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
-        .petal { position: absolute; background: var(--sakura-pink); border-radius: 150% 0 150% 150%; z-index: 5; pointer-events: none; }
-        .radio-footer { position: absolute; bottom: 20px; width: 200px; height: 40px; opacity: 0.4; overflow: hidden; border-radius: 10px; z-index: 1000; }
+        /* Forest UI */
+        #ui-container { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 40px; width: 300px; text-align: center; }
+        #spirit-stage { height: 150px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 20px; }
+        .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; }
+        .full-tree { width: 22px; height: 80px; background: #5d4037; position: relative; }
+        .canopy { width: 140px; height: 120px; background: var(--sakura-pink); border-radius: 50%; position: absolute; top: -100px; left: -59px; filter: blur(1px); }
 
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .log { font-size: 0.8rem; margin-top: 15px; height: 40px; color: #555; }
+        .radio-footer { position: absolute; bottom: 10px; width: 200px; height: 40px; opacity: 0.3; border-radius: 10px; overflow: hidden; }
     </style>
 </head>
 <body>
 
 <div id="nav-bar">
-    <button class="nav-btn" onclick="showScreen('tree-screen')">🌸 Forest</button>
-    <button class="nav-btn" onclick="showScreen('game-screen')">🧹 Delivery</button>
+    <button class="nav-btn" onclick="showScreen('forest-screen')">🌸 Forest</button>
+    <button class="nav-btn" onclick="showScreen('rpg-screen')">⚔️ Battle</button>
 </div>
 
-<div id="tree-screen" class="screen active">
+<div id="forest-screen" class="screen active">
     <div id="ui-container">
         <div class="stats">
-            🌸 PETALS: <span id="sap-count">0</span><br>
-            ⛩️ SHRINES: <span id="tree-count">0</span>
+            🌸 PETALS: <span id="p-count">0</span><br>
+            ⛩️ SHRINES: <span id="s-count">0</span>
         </div>
-        <div id="spirit-stage">
-            <div id="tree-visual"></div>
-        </div>
-        <button id="plant-btn" class="plant-btn">Nurture Forest (1,000 🌸)</button>
+        <div id="spirit-stage"><div id="tree-vis"></div></div>
+        <button class="nav-btn" onclick="nurture()" style="width: 100%; background: var(--ui-accent); color: white;">Nurture Tree (1,000 🌸)</button>
     </div>
 </div>
 
-<div id="game-screen" class="screen">
-    <div id="game-canvas-container" onclick="jump()">
-        <div id="score-display">0</div>
-        <div id="player">🧹</div>
-        <div id="game-hint" style="position:absolute; bottom:20%; width:100%; text-align:center; color:white; font-weight:bold;">Tap to Fly! Avoid the Clouds!</div>
-    </div>
-</div>
-
-<div class="radio-footer">
-    <iframe width="100%" height="40" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1&showinfo=0&rel=0" frameborder="0"></iframe>
-</div>
-
-<script>
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
-    let gameActive = false;
-    let gravity = 0.6;
-    let velocity = 0;
-    let playerY = 300;
-    let score = 0;
-    let obstacles = [];
-
-    const sapLabel = document.getElementById('sap-count');
-    const treeLabel = document.getElementById('tree-count');
-    const treeVisual = document.getElementById('tree-visual');
-    const player = document.getElementById('player');
-    const scoreDisplay = document.getElementById('score-display');
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        gameActive = (id === 'game-screen');
-        if (gameActive) resetGame();
-    }
-
-    // --- FOREST LOGIC ---
-    function updateTreeVisual() {
-        treeVisual.className = ""; treeVisual.innerHTML = "";
-        if (state.totalPlanted === 0) treeVisual.classList.add("seed");
-        else if (state.totalPlanted < 5) treeVisual.classList.add("sprout");
-        else {
-            treeVisual.classList.add("full-tree");
-            treeVisual.innerHTML = '<div class="canopy"></div>';
-        }
-    }
-
-    function updateUI() {
-        sapLabel.textContent = Math.floor(state.sap).toLocaleString();
-        treeLabel.textContent = state.totalPlanted;
-        updateTreeVisual();
-        localStorage.setItem('spiritTreeSave', JSON.stringify(state));
-    }
-
-    setInterval(() => { state.sap += 1; updateUI(); }, 1000);
-
-    document.getElementById('plant-btn').onclick = () => {
-        if (state.sap >= 1000) { state.sap -= 1000; state.totalPlanted += 1; updateUI(); }
-    };
-
-    // --- BAKERY GAME LOGIC ---
-    function jump() {
-        if (!gameActive) return;
-        velocity = -8;
-    }
-
-    function resetGame() {
-        playerY = 300;
-        velocity = 0;
-        score = 0;
-        obstacles.forEach(o => o.remove());
-        obstacles = [];
-        scoreDisplay.textContent = "0";
-    }
-
-    function gameLoop() {
-        if (!gameActive) { requestAnimationFrame(gameLoop); return; }
-
-        velocity += gravity;
-        playerY += velocity;
-        player.style.top = playerY + 'px';
-        player.style.transform = `rotate(${velocity * 3}deg)`;
-
-        // Collision or Off-screen
-        if (playerY > window.innerHeight || playerY < 0) {
-            alert("Delivery Interrupted! You earned " + score + " petals.");
-            state.sap += score;
-            updateUI();
-            showScreen('tree-screen');
-        }
-
-        // Spawn obstacles
-        if (Math.random() < 0.02) {
-            const cloud = document.createElement('div');
-            cloud.className = 'obstacle';
-            cloud.style.width = (Math.random() * 100 + 100) + 'px';
-            cloud.style.height = '60px';
-            cloud.style.right = '-200px';
-            cloud.style.top = Math.random() * 80 + 10 + '%';
-            document.getElementById('game-canvas-container').appendChild(cloud);
-            obstacles.push(cloud);
-        }
-
-        // Move obstacles
-        obstacles.forEach((o, index) => {
-            let currentRight = parseInt(o.style.right);
-            o.style.right = (currentRight + 5) + 'px';
-
-            // Collision check
-            let rect = o.getBoundingClientRect();
-            let pRect = player.getBoundingClientRect();
-            if (pRect.left < rect.right && pRect.right > rect.left && pRect.top < rect.bottom && pRect.bottom > rect.top) {
-                gameActive = false;
-                alert("Cloudy Skies! You collected " + score + " petals.");
-                state.sap += score;
-                updateUI();
-                showScreen('tree-screen');
-            }
-
-            if (currentRight > window.innerWidth + 200) {
-                o.remove();
-                obstacles.splice(index, 1);
-                score += 10;
-                scoreDisplay.textContent = score;
-            }
-        });
-
-        requestAnimationFrame(gameLoop);
-    }
-
-    // Sakura Rain
-    function createPetal() {
-        const p = document.createElement('div');
-        p.className = 'petal';
-        p.style.width = '8px'; p.style.height = '8px';
-        p.style.left = Math.random() * 100 + 'vw'; p.style.top = '-10px';
-        document.body.appendChild(p);
-        p.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: `translate(${Math.random()*100-50}px, 100vh)`, opacity: 0 }], { duration: 6000 }).onfinish = () => p.remove();
-    }
-    setInterval(createPetal, 500);
-
-    updateUI();
-    gameLoop();
-</script>
-</body>
-</html>
+<div id="rpg-screen" class="screen">
+    <div id="rpg-container">
+        <div class="stats">
+            Level <span id="p-lvl">1</span> Warrior | 🌸 <span id="rpg-p-count">0</span>
+        </div>
+        
+        <div class="battle-stage">
+            <div id="player-char">
+                <div class="entity">🐱</div>
+                <div class="hp-bar">
