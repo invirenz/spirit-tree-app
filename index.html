@@ -1,1 +1,76 @@
+<script>
+    // 1. App State
+    let state = {
+        sap: 0,
+        totalPlanted: 0,
+        currentLevel: 0,
+        lastTick: Date.now()
+    };
 
+    // 2. The AFK Engine (Fixed to 1 Sap per second)
+    function tick() {
+        const now = Date.now();
+        // Only add points if 1 second (1000ms) has passed
+        if (now - state.lastTick >= 1000) {
+            state.sap += 1;
+            state.lastTick = now;
+            updateUI();
+            checkEvolution();
+        }
+        
+        // Keep the "Pulse" animation smooth at 60fps
+        const treeArt = document.getElementById('tree-art');
+        if (treeArt) {
+            treeArt.style.transform = `scale(${1 + (Math.sin(now / 500) * 0.02)})`;
+        }
+
+        requestAnimationFrame(tick);
+    }
+
+    // 3. UI Update Logic
+    function updateUI() {
+        document.getElementById('sap-count').innerText = Math.floor(state.sap);
+        document.getElementById('tree-count').innerText = state.totalPlanted;
+    }
+
+    // 4. Evolution Logic
+    function checkEvolution() {
+        if (state.sap >= 5000 && state.currentLevel === 0) {
+            state.currentLevel = 1;
+            console.log("Ready for Stage 2 Art!");
+        }
+    }
+
+    // 5. The Digital Humani Trigger
+    async function plantRealTree() {
+        if (state.sap >= 1000) {
+            console.log("Contacting tree-planting servers...");
+            
+            try {
+                const response = await fetch('/api/plant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userEmail: "fan@spirittree.app" })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    state.sap -= 1000;
+                    state.totalPlanted += 1;
+                    updateUI();
+                    alert("Success! Your Sap helped plant a real-world tree via Digital Humani.");
+                } else {
+                    alert("API Error: " + result.data.message);
+                }
+            } catch (err) {
+                alert("Connection failed. Make sure your Vercel project is fully deployed!");
+            }
+        } else {
+            alert("You need 1,000 Sap points to plant a real tree!");
+        }
+    }
+
+    // Start the app
+    tick();
+</script>
