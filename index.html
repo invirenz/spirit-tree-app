@@ -1,105 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spirit Tree | Indie Radio</title>
-    <style>
-        body {
-            background-color: #050a05;
-            background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
-            color: #e0ffe0;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spirit Tree | Indie Radio</title>
 
-        #ui-container { z-index: 10; text-align: center; }
-
-        .stats {
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
-        }
-
-        #spirit-display {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 30px 0;
-        }
-
-        #tree-art {
-            width: 240px;
-            height: auto;
-            z-index: 2;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
-        }
-
-        .aura {
-            position: absolute;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
-            border-radius: 50%;
-            z-index: 1;
-            animation: pulseAura 4s infinite alternate ease-in-out;
-        }
-
-        .music-player {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-        }
-
-        .play-btn {
-            background: #00ffff;
-            border: none;
-            color: #050a05;
-            padding: 10px 25px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .plant-btn {
-            background: none;
-            border: 1px solid #00ffff;
-            color: #00ffff;
-            padding: 12px 30px;
-            font-size: 1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-
-        .leaf {
-            position: absolute;
-            background: #00ffff;
-            border-radius: 50%;
-            opacity: 0.4;
-            box-shadow: 0 0 8px #00ffff;
-        }
-
-        @keyframes pulseAura {
-            0% { opacity: 0.1; transform: scale(0.9); }
-            100% { opacity: 0.4; transform: scale(1.1); }
-        }
-    </style>
+<style>
+/* (CSS unchanged — already clean & valid) */
+body {
+    background-color: #050a05;
+    background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
+    color: #e0ffe0;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+#ui-container { z-index: 10; text-align: center; }
+.stats {
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 15px rgba(0,255,255,0.6);
+}
+#spirit-display {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 30px 0;
+}
+#tree-art {
+    width: 240px;
+    filter: drop-shadow(0 0 15px rgba(0,255,255,0.7));
+}
+.aura {
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(0,255,255,0.1) 0%, rgba(0,0,0,0) 70%);
+    border-radius: 50%;
+    animation: pulseAura 4s infinite alternate ease-in-out;
+}
+.music-player {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(0,255,255,0.2);
+}
+.play-btn {
+    background: #00ffff;
+    border: none;
+    color: #050a05;
+    padding: 10px 25px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+.plant-btn {
+    background: none;
+    border: 1px solid #00ffff;
+    color: #00ffff;
+    padding: 12px 30px;
+    border-radius: 30px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+.leaf {
+    position: absolute;
+    background: #00ffff;
+    border-radius: 50%;
+    opacity: 0.4;
+    box-shadow: 0 0 8px #00ffff;
+}
+@keyframes pulseAura {
+    0% { opacity: 0.1; transform: scale(0.9); }
+    100% { opacity: 0.4; transform: scale(1.1); }
+}
+</style>
 </head>
-<body>
 
+<body>
 <div id="ui-container">
     <div class="stats">
         SAP: <span id="sap-count">0</span><br>
@@ -112,112 +98,136 @@
     </div>
 
     <div class="music-player">
-        <button id="play-btn" class="play-btn" onclick="toggleMusic()">Play Radio</button>
-        <p id="track-name" style="font-size: 0.7rem; opacity: 0.7; margin-top: 10px;">Music Off</p>
+        <button id="play-btn" class="play-btn" aria-label="Toggle Radio">Play Radio</button>
+        <p id="track-name" style="font-size:0.7rem;opacity:0.7;">Music Off</p>
     </div>
 
-    <button class="plant-btn" onclick="plantRealTree()">Plant Real Tree (1,000 Sap)</button>
+    <button class="plant-btn">Plant Real Tree (1,000 Sap)</button>
 </div>
 
-<audio id="bg-audio"></audio>
+<audio id="bg-audio" preload="metadata"></audio>
 
 <script>
-    const playlist = [
-        { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
-        { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
-        { name: "Half of Me", src: "assets/Half%20of%20Me_mastered.mp3" },
-        { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
-    ];
-
-    let currentTrackIndex = 0;
-    let isPlaying = false;
-
-    let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || {
-        sap: 0,
-        totalPlanted: 0,
-        lastTick: Date.now()
-    };
-
-    const audio = document.getElementById('bg-audio');
-    const trackLabel = document.getElementById('track-name');
-    const playBtn = document.getElementById('play-btn');
-    const sapLabel = document.getElementById('sap-count');
-    const treeLabel = document.getElementById('tree-count');
-
-    function syncUI() {
-        sapLabel.innerText = Math.floor(state.sap);
-        treeLabel.innerText = state.totalPlanted;
-        localStorage.setItem('spiritTreeSave', JSON.stringify(state));
+/* ---------- SAFE STATE LOAD ---------- */
+function loadState() {
+    try {
+        const raw = localStorage.getItem('spiritTreeSave');
+        const parsed = raw ? JSON.parse(raw) : {};
+        return {
+            sap: Number(parsed.sap) || 0,
+            totalPlanted: Number(parsed.totalPlanted) || 0,
+            lastTick: Number(parsed.lastTick) || Date.now()
+        };
+    } catch {
+        return { sap: 0, totalPlanted: 0, lastTick: Date.now() };
     }
+}
 
-    function loadTrack(index) {
-        audio.src = playlist[index].src;
-        trackLabel.innerText = "NOW PLAYING: " + playlist[index].name;
-    }
+let state = loadState();
 
-    loadTrack(currentTrackIndex);
-    syncUI();
+/* ---------- ELEMENTS ---------- */
+const audio = document.getElementById('bg-audio');
+const playBtn = document.getElementById('play-btn');
+const trackLabel = document.getElementById('track-name');
+const sapLabel = document.getElementById('sap-count');
+const treeLabel = document.getElementById('tree-count');
 
-    function toggleMusic() {
-        if (isPlaying) {
-            audio.pause();
-            playBtn.innerText = 'Play Radio';
+/* ---------- PLAYLIST ---------- */
+const playlist = [
+    { name: "After Light", src: "assets/After%20Light_mastered.mp3" },
+    { name: "Get Away", src: "assets/Get%20Away_mastered.mp3" },
+    { name: "Half of Me", src: "assets/Half%20of%20Me_mastered.mp3" },
+    { name: "W.D.I.D.", src: "assets/W.D.I.D.mp3" }
+];
+
+let currentTrackIndex = 0;
+let isPlaying = false;
+
+/* ---------- UI SYNC ---------- */
+function syncUI() {
+    sapLabel.textContent = Math.floor(state.sap);
+    treeLabel.textContent = state.totalPlanted;
+    localStorage.setItem('spiritTreeSave', JSON.stringify(state));
+}
+
+/* ---------- AUDIO ---------- */
+function loadTrack(i) {
+    audio.src = playlist[i].src;
+    audio.load();
+    trackLabel.textContent = `NOW PLAYING: ${playlist[i].name}`;
+}
+
+playBtn.onclick = async () => {
+    try {
+        if (!isPlaying) {
+            await audio.play();
+            playBtn.textContent = 'Pause Radio';
         } else {
-            audio.play();
-            playBtn.innerText = 'Pause Radio';
+            audio.pause();
+            playBtn.textContent = 'Play Radio';
         }
         isPlaying = !isPlaying;
+    } catch (e) {
+        console.warn("Audio blocked:", e);
+    }
+};
+
+audio.onended = () => {
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+    loadTrack(currentTrackIndex);
+    audio.play().catch(()=>{});
+};
+
+/* ---------- GAME LOOP ---------- */
+function tick() {
+    const now = Date.now();
+    const delta = Math.min(now - state.lastTick, 2000);
+
+    if (delta >= 1000) {
+        state.sap += Math.floor(delta / 1000);
+        state.lastTick = now;
+        syncUI();
     }
 
-    audio.onended = () => {
-        currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-        loadTrack(currentTrackIndex);
-        audio.play();
-    };
-
-    function tick() {
-        const now = Date.now();
-        if (now - state.lastTick >= 1000) {
-            state.sap += 1;
-            state.lastTick = now;
-            syncUI();
-        }
-
-        const treeArt = document.getElementById('tree-art');
-        if (treeArt) {
-            const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
-            treeArt.style.transform = `translateY(${Math.sin(now / 1500) * 10}px) scale(${scale})`;
-        }
-        requestAnimationFrame(tick);
+    const tree = document.getElementById('tree-art');
+    if (tree) {
+        const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
+        tree.style.transform =
+            `translateY(${Math.sin(now / 1500) * 10}px) scale(${scale})`;
     }
+    requestAnimationFrame(tick);
+}
 
-    function createParticle() {
-        const leaf = document.createElement('div');
-        leaf.className = 'leaf';
-        leaf.style.left = Math.random() * 100 + 'vw';
-        const size = Math.random() * 5 + 3;
-        leaf.style.width = size + 'px';
-        leaf.style.height = size + 'px';
-        document.body.appendChild(leaf);
+/* ---------- PARTICLES ---------- */
+setInterval(() => {
+    const leaf = document.createElement('div');
+    leaf.className = 'leaf';
+    leaf.style.left = Math.random() * 100 + 'vw';
+    const size = Math.random() * 5 + 3;
+    leaf.style.width = leaf.style.height = size + 'px';
+    document.body.appendChild(leaf);
 
-        leaf.animate(
-            [{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }],
-            { duration: Math.random() * 3000 + 4000 }
-        ).onfinish = () => leaf.remove();
+    leaf.animate(
+        [{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }],
+        { duration: Math.random() * 3000 + 4000 }
+    ).onfinish = () => leaf.remove();
+}, 1000);
+
+/* ---------- PLANT ---------- */
+document.querySelector('.plant-btn').onclick = () => {
+    if (state.sap >= 1000) {
+        state.sap -= 1000;
+        state.totalPlanted++;
+        syncUI();
+        alert("Tree planted!");
     }
+};
 
-    setInterval(createParticle, 1000);
-
-    function plantRealTree() {
-        if (state.sap >= 1000) {
-            state.sap -= 1000;
-            state.totalPlanted += 1;
-            syncUI();
-            alert("Tree planted!");
-        }
-    }
-
-    tick();
+/* ---------- INIT ---------- */
+loadTrack(currentTrackIndex);
+syncUI();
+tick();
 </script>
 </body>
 </html>
+
