@@ -84,6 +84,12 @@
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
         }
 
+        .play-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
         .plant-btn {
             background: none;
             border: 1px solid #00ffff;
@@ -104,17 +110,17 @@
             z-index: 0;
         }
 
+        @keyframes pulseAura {
+            0% { opacity: 0.2; transform: scale(0.9); }
+            100% { opacity: 0.5; transform: scale(1.1); }
+        }
+
         #track-name {
             font-size: 0.75rem;
             opacity: 0.8;
             margin-top: 15px;
             letter-spacing: 1px;
             min-height: 1.2em;
-        }
-
-        @keyframes pulseAura {
-            0% { opacity: 0.2; transform: scale(0.9); }
-            100% { opacity: 0.5; transform: scale(1.1); }
         }
     </style>
 </head>
@@ -132,8 +138,8 @@
     </div>
 
     <div class="music-player">
-        <button id="play-btn" class="play-btn">Tap to Start</button>
-        <p id="track-name">Radio Ready</p>
+        <button id="play-btn" class="play-btn">START RADIO</button>
+        <p id="track-name">CONNECTING...</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
@@ -146,7 +152,6 @@
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // Use these exact names after renaming files in GitHub
     const playlist = [
         { name: "After Light", src: "assets/after_light.mp3" },
         { name: "Get Away", src: "assets/get_away.mp3" },
@@ -176,35 +181,47 @@
             updateUI();
         }
         const float = Math.sin(now / 1500) * 10;
-        const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.03;
+        const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.04;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
         requestAnimationFrame(gameLoop);
     }
 
-    // 3. AUDIO LOGIC (The Fix)
-    async function toggleRadio() {
-        // Step 1: Force reset source to clear "NotSupportedError"
-        if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
-            audio.src = playlist[currentTrackIndex].src;
-            audio.load();
-        }
+    // 3. THE BLOB FETCH FIX (Forces the browser to accept the data)
+    async function loadAndPlay() {
+        const track = playlist[currentTrackIndex];
+        trackLabel.textContent = "LOADING SIGNAL...";
+        playBtn.disabled = true;
 
         try {
-            if (audio.paused) {
-                await audio.play();
-                isPlaying = true;
-                playBtn.textContent = "Stop Radio";
-                trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
-                trackLabel.style.color = "#00ffff";
-            } else {
-                audio.pause();
-                isPlaying = false;
-                playBtn.textContent = "Start Radio";
-                trackLabel.textContent = "Radio Paused";
-            }
+            const response = await fetch(track.src);
+            if (!response.ok) throw new Error('Network error');
+            
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            
+            audio.src = url;
+            await audio.play();
+            
+            isPlaying = true;
+            playBtn.disabled = false;
+            playBtn.textContent = "STOP RADIO";
+            trackLabel.textContent = "LIVE: " + track.name;
+            trackLabel.style.color = "#00ffff";
         } catch (err) {
             console.error(err);
-            trackLabel.textContent = "Syncing... Tap again!";
+            trackLabel.textContent = "SIGNAL LOST. TRY AGAIN.";
+            playBtn.disabled = false;
+        }
+    }
+
+    async function toggleRadio() {
+        if (audio.paused || !isPlaying) {
+            await loadAndPlay();
+        } else {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = "START RADIO";
+            trackLabel.textContent = "SIGNAL PAUSED";
         }
     }
 
@@ -212,14 +229,7 @@
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-        audio.src = playlist[currentTrackIndex].src;
-        audio.play();
-        trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
-    };
-
-    audio.onerror = () => {
-        trackLabel.textContent = "Error loading audio file.";
-        trackLabel.style.color = "#ff5555";
+        loadAndPlay();
     };
 
     // 4. TREE PLANTING
@@ -247,6 +257,7 @@
     }
 
     setInterval(createLeaf, 2000);
+    trackLabel.textContent = "RADIO READY";
     updateUI();
     requestAnimationFrame(gameLoop);
 </script>
