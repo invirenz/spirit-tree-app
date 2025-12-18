@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakura Spirit | Lo-Fi Forest</title>
+    <title>Sakura Spirit | Cozy Hub</title>
     <style>
         :root {
             --sakura-pink: #ffb7c5;
             --ui-accent: #5a8a58;
             --trunk-brown: #5d4037;
+            --soot-black: #333;
         }
 
         body {
@@ -17,27 +18,45 @@
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             overflow: hidden;
         }
 
+        /* Navigation Bar */
+        #nav-bar {
+            position: absolute;
+            top: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
         #ui-container {
             position: relative;
             z-index: 10;
             text-align: center;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.85);
             padding: 30px;
             border-radius: 40px;
-            backdrop-filter: blur(10px);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             width: 320px;
         }
 
-        .stats { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; }
-
-        /* --- TREE STAGES --- */
+        /* --- TREE VISUALS --- */
         #spirit-stage {
             height: 160px;
             display: flex;
@@ -45,7 +64,6 @@
             justify-content: center;
             margin-bottom: 20px;
         }
-
         .seed { width: 30px; height: 35px; background: #8d6e63; border-radius: 50% 50% 40% 40%; animation: pulse 2s infinite; }
         .sprout { width: 12px; height: 60px; background: #aed581; border-radius: 5px; position: relative; }
         .full-tree { width: 22px; height: 80px; background: var(--trunk-brown); position: relative; }
@@ -58,45 +76,60 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* --- BUTTONS --- */
+        /* --- SOOT SPRITES --- */
+        .soot-sprite {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--soot-black);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .soot-sprite::before, .soot-sprite::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            margin: 2px;
+        }
+
         .plant-btn {
             background: var(--ui-accent);
             border: none;
             color: white;
-            padding: 15px 30px;
+            padding: 15px;
             border-radius: 50px;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
-            transition: 0.2s;
         }
-        .plant-btn:active { transform: scale(0.95); }
 
-        /* --- THE RADIO (Minimalist) --- */
+        /* Minimalist Radio */
         .radio-footer {
             position: absolute;
             bottom: 20px;
             width: 200px;
             height: 40px;
-            opacity: 0.5; /* Makes it subtle */
-            transition: opacity 0.3s;
+            opacity: 0.4;
             overflow: hidden;
             border-radius: 10px;
-            background: white;
         }
-        .radio-footer:hover { opacity: 1; }
 
-        /* Petal Rain */
-        .petal {
-            position: absolute;
-            background: var(--sakura-pink);
-            border-radius: 150% 0 150% 150%;
-            z-index: 5;
-            pointer-events: none;
-        }
+        .petal { position: absolute; background: var(--sakura-pink); border-radius: 150% 0 150% 150%; z-index: 5; pointer-events: none; }
     </style>
 </head>
 <body>
+
+<div id="nav-bar">
+    <button class="nav-btn" onclick="showGame('tree')">🌸 Forest</button>
+    <button class="nav-btn" onclick="alert('Bakery Game Coming Soon!')">🧹 Delivery</button>
+</div>
 
 <div id="ui-container">
     <div class="stats">
@@ -108,12 +141,12 @@
         <div id="tree-visual"></div>
     </div>
 
-    <button id="plant-btn" class="plant-btn">NURTURE FOREST (1,000 🌸)</button>
-    <p style="font-size: 0.7rem; margin-top: 10px; color: #666;">Press play on the radio below!</p>
+    <button id="plant-btn" class="plant-btn">Nurture Forest (1,000 🌸)</button>
+    <p id="hint" style="font-size: 0.7rem; margin-top: 10px; color: #666;">Watch for Soot Sprites!</p>
 </div>
 
 <div class="radio-footer">
-    <iframe width="100%" height="40" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1&showinfo=0&rel=0&autoplay=0" frameborder="0" allow="autoplay"></iframe>
+    <iframe width="100%" height="40" src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1&showinfo=0&rel=0" frameborder="0"></iframe>
 </div>
 
 <script>
@@ -125,13 +158,10 @@
     const plantBtn = document.getElementById('plant-btn');
 
     function updateTreeVisual() {
-        treeVisual.className = "";
-        treeVisual.innerHTML = "";
-        if (state.totalPlanted === 0) {
-            treeVisual.classList.add("seed");
-        } else if (state.totalPlanted < 5) {
-            treeVisual.classList.add("sprout");
-        } else {
+        treeVisual.className = ""; treeVisual.innerHTML = "";
+        if (state.totalPlanted === 0) treeVisual.classList.add("seed");
+        else if (state.totalPlanted < 5) treeVisual.classList.add("sprout");
+        else {
             treeVisual.classList.add("full-tree");
             treeVisual.innerHTML = '<div class="canopy"></div>';
         }
@@ -144,10 +174,28 @@
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    setInterval(() => {
-        state.sap += 1;
-        updateUI();
-    }, 1000);
+    // Passive Income
+    setInterval(() => { state.sap += 1; updateUI(); }, 1000);
+
+    // SOOT SPRITE MECHANIC
+    function spawnSootSprite() {
+        const sprite = document.createElement('div');
+        sprite.className = 'soot-sprite';
+        sprite.style.left = Math.random() * 80 + 10 + 'vw';
+        sprite.style.top = Math.random() * 80 + 10 + 'vh';
+        
+        sprite.onclick = () => {
+            state.sap += 50;
+            updateUI();
+            sprite.remove();
+            createBurst(sprite.style.left, sprite.style.top);
+        };
+
+        document.body.appendChild(sprite);
+        setTimeout(() => { if(sprite) sprite.remove(); }, 3000);
+    }
+    // Spawn a sprite every 10-20 seconds
+    setInterval(spawnSootSprite, Math.random() * 10000 + 10000);
 
     plantBtn.onclick = () => {
         if (state.sap >= 1000) {
@@ -161,14 +209,16 @@
         const p = document.createElement('div');
         p.className = 'petal';
         const size = Math.random() * 8 + 5;
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.left = Math.random() * 100 + 'vw';
-        p.style.top = '-10px';
+        p.style.width = size + 'px'; p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + 'vw'; p.style.top = '-10px';
         document.body.appendChild(p);
         p.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: `translate(${Math.random()*100-50}px, 100vh)`, opacity: 0 }], { duration: 6000 }).onfinish = () => p.remove();
     }
     setInterval(createPetal, 500);
+
+    function createBurst(x, y) {
+        for(let i=0; i<5; i++) createPetal(); // Visual reward
+    }
 
     updateUI();
 </script>
