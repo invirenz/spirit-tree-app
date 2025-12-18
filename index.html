@@ -18,14 +18,12 @@
             margin: 0;
             overflow: hidden;
             touch-action: manipulation;
-            cursor: pointer; /* Shows user they can click anywhere */
         }
 
         #ui-container {
             position: relative;
             z-index: 100;
             text-align: center;
-            pointer-events: none;
         }
 
         .stats {
@@ -48,6 +46,7 @@
             height: auto;
             z-index: 2;
             filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
+            pointer-events: none;
         }
 
         .aura {
@@ -58,25 +57,44 @@
             border-radius: 50%;
             z-index: 1;
             animation: pulseAura 4s infinite alternate ease-in-out;
+            pointer-events: none;
         }
+
+        .music-player {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            min-width: 280px;
+        }
+
+        .play-btn {
+            background: #00ffff;
+            border: none;
+            color: #050a05;
+            padding: 18px 45px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            transition: 0.2s;
+        }
+
+        .play-btn:active { transform: scale(0.95); }
 
         .plant-btn {
             background: none;
             border: 1px solid #00ffff;
             color: #00ffff;
-            padding: 15px 40px;
-            border-radius: 40px;
+            padding: 12px 30px;
+            border-radius: 30px;
             cursor: pointer;
-            margin-top: 40px;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            pointer-events: auto; /* Allows button to be clicked */
-            transition: 0.3s;
-        }
-
-        .plant-btn:active {
-            background: rgba(0, 255, 255, 0.2);
+            margin-top: 25px;
+            font-size: 0.9rem;
         }
 
         .leaf {
@@ -93,12 +111,11 @@
             100% { opacity: 0.5; transform: scale(1.1); }
         }
 
-        #status-text {
-            position: fixed;
-            bottom: 20px;
+        #track-name {
             font-size: 0.7rem;
-            letter-spacing: 2px;
-            opacity: 0.6;
+            opacity: 0.8;
+            margin-top: 15px;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -115,10 +132,13 @@
         <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
     </div>
 
+    <div class="music-player">
+        <button id="play-btn" class="play-btn">ACTIVATE RADIO</button>
+        <p id="track-name">OFFLINE</p>
+    </div>
+
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
-
-<div id="status-text">TAP ANYWHERE TO START RADIO</div>
 
 <script>
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
@@ -127,18 +147,24 @@
     let currentTrackIndex = 0;
 
     const playlist = [
-        { name: "After Light", src: "/assets/After_Light_mastered.mp3" },
-        { name: "Get Away", src: "/assets/Get_Away_mastered.mp3" },
-        { name: "Half of Me", src: "/assets/Half_of_Me_mastered.mp3" },
-        { name: "W.D.I.D.", src: "/assets/WDID.mp3" }
+        { name: "After Light", src: "assets/After_Light_mastered.mp3" },
+        { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
+        { name: "Half of Me", src: "assets/Half_of_Me_mastered.mp3" },
+        { name: "W.D.I.D.", src: "assets/WDID.mp3" }
     ];
 
+    // Initialize Audio Object
     const audio = new Audio();
-    const statusLabel = document.getElementById('status-text');
+    audio.crossOrigin = "anonymous";
+    audio.preload = "auto";
+
+    const playBtn = document.getElementById('play-btn');
+    const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
     const treeLabel = document.getElementById('tree-count');
     const treeArt = document.getElementById('tree-art');
 
+    // --- GAME LOGIC ---
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
@@ -158,34 +184,52 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- AUTO-PLAY ON FIRST CLICK ---
-    async function initAudio() {
-        if (isPlaying) return;
+    // --- THE UNLOCKER ---
+    async function startRadio() {
+        console.log("Activation triggered...");
 
-        audio.src = playlist[currentTrackIndex].src;
-        try {
-            await audio.play();
-            isPlaying = true;
-            statusLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
-            // Once audio starts, we don't need the global click listener anymore
-            document.body.removeEventListener('click', initAudio);
-        } catch (e) {
-            statusLabel.textContent = "TAP AGAIN TO SYNC AUDIO";
+        // Step 1: Force an AudioContext resume (Standard Web Audio fix)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+        }
+
+        // Step 2: Set source if missing
+        if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
+            audio.src = playlist[currentTrackIndex].src;
+            audio.load();
+        }
+
+        if (audio.paused) {
+            try {
+                // Step 3: Attempt play
+                await audio.play();
+                isPlaying = true;
+                playBtn.textContent = "PAUSE RADIO";
+                trackLabel.textContent = "STREAMING: " + playlist[currentTrackIndex].name;
+            } catch (err) {
+                console.error("Critical Block:", err);
+                trackLabel.textContent = "FILE MISSING OR BLOCKED. TAP AGAIN.";
+            }
+        } else {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = "RESUME RADIO";
+            trackLabel.textContent = "PAUSED";
         }
     }
 
-    // This listens for a click anywhere on the screen
-    document.body.addEventListener('click', initAudio);
+    playBtn.addEventListener('click', startRadio);
 
     audio.onended = () => {
         currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
         audio.src = playlist[currentTrackIndex].src;
         audio.play();
-        statusLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
+        trackLabel.textContent = "STREAMING: " + playlist[currentTrackIndex].name;
     };
 
-    document.getElementById('plant-btn').onclick = async (e) => {
-        e.stopPropagation(); // Prevents the global "play" trigger from firing twice
+    // --- SAP PLANTING ---
+    document.getElementById('plant-btn').onclick = async () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
@@ -196,13 +240,13 @@
         }
     };
 
+    // --- BACKGROUND LEAVES ---
     function createLeaf() {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
         leaf.style.left = (Math.random() * 100) + 'vw';
         const size = (Math.random() * 5 + 2) + 'px';
-        leaf.style.width = size;
-        leaf.style.height = size;
+        leaf.style.width = size; leaf.style.height = size;
         document.body.appendChild(leaf);
         leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], { duration: 6000 }).onfinish = () => leaf.remove();
     }
