@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <title>Spirit Tree | Global Radio</title>
+    <title>Sakura Spirit | Ghibli Radio</title>
     <style>
+        :root {
+            --ghibli-sky: #87ceeb;
+            --ghibli-cloud: #ffffff;
+            --sakura-pink: #ffb7c5;
+            --sakura-dark: #ff91a4;
+            --ui-accent: #5a8a58; /* Soft forest green */
+        }
+
         body {
-            background-color: #050a05;
-            background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
-            color: #e0ffe0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Ghibli Daylight Sky Gradient */
+            background: linear-gradient(180deg, #4facfe 0%, #8ec5fc 100%);
+            color: #2c3e50;
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic Pro', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -21,17 +29,43 @@
             touch-action: manipulation;
         }
 
+        /* Animated Clouds */
+        .cloud {
+            position: absolute;
+            background: var(--ghibli-cloud);
+            width: 200px;
+            height: 60px;
+            border-radius: 50px;
+            opacity: 0.8;
+            filter: blur(20px);
+            z-index: 0;
+            animation: floatClouds 60s linear infinite;
+        }
+
+        @keyframes floatClouds {
+            from { left: -250px; }
+            to { left: 100vw; }
+        }
+
         #ui-container {
             position: relative;
             z-index: 100;
             text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .stats {
-            font-size: 1.2rem;
-            letter-spacing: 2px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
             margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         #spirit-display {
@@ -43,97 +77,105 @@
         }
 
         #tree-art {
-            width: 240px;
+            width: 260px;
             height: auto;
             z-index: 2;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
+            /* Soft shadow for Ghibli hand-drawn feel */
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
             pointer-events: none;
         }
 
         .aura {
             position: absolute;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
             border-radius: 50%;
             z-index: 1;
-            animation: pulseAura 4s infinite alternate ease-in-out;
+            animation: pulseAura 5s infinite alternate ease-in-out;
             pointer-events: none;
         }
 
-        /* GHIBLI LEAF PARTICLES */
-        .leaf {
+        /* SAKURA PETAL PARTICLES */
+        .petal {
             position: absolute;
-            background: #78ffd6;
-            width: 10px;
-            height: 15px;
-            border-radius: 2px 10px 2px 10px;
+            background: var(--sakura-pink);
+            width: 12px;
+            height: 8px;
+            border-radius: 50% 0 50% 50%;
             opacity: 0;
             pointer-events: none;
             z-index: 5;
-            box-shadow: 0 0 8px rgba(120, 255, 214, 0.4);
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
         }
 
         .music-player {
             margin-top: 20px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50px;
             min-width: 280px;
         }
 
         .play-btn {
-            background: #00ffff;
+            background: #ffffff;
             border: none;
-            color: #050a05;
-            padding: 18px 45px;
+            color: var(--ui-accent);
+            padding: 15px 40px;
             border-radius: 40px;
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: 0.2s;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
         .plant-btn {
-            background: none;
-            border: 1px solid #00ffff;
-            color: #00ffff;
-            padding: 12px 30px;
+            background: var(--ui-accent);
+            border: none;
+            color: white;
+            padding: 10px 25px;
             border-radius: 30px;
             cursor: pointer;
-            margin-top: 25px;
-            font-size: 0.9rem;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
         }
 
         #track-name {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            margin-top: 15px;
-            letter-spacing: 1px;
-            min-height: 1.2em;
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 12px;
+            font-weight: 500;
         }
 
         @keyframes pulseAura {
-            0% { opacity: 0.2; transform: scale(0.9); }
-            100% { opacity: 0.5; transform: scale(1.1); }
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 0.7; transform: scale(1.2); }
         }
     </style>
 </head>
 <body>
 
+<div class="cloud" style="top: 10%; animation-duration: 80s;"></div>
+<div class="cloud" style="top: 25%; animation-duration: 120s; width: 300px;"></div>
+<div class="cloud" style="top: 50%; animation-duration: 90s; opacity: 0.4;"></div>
+
 <div id="ui-container">
     <div class="stats">
-        SAP: <span id="sap-count">0</span><br>
-        GLOBAL TREES: <span id="tree-count">0</span>
+        🌸 PETALS: <span id="sap-count">0</span><br>
+        SHRINES PLANTED: <span id="tree-count">0</span>
     </div>
 
     <div id="spirit-display">
         <div class="aura"></div>
-        <img id="tree-art" src="assets/orb-stage-1.png" alt="Spirit Orb">
+        <img id="tree-art" src="assets/orb-stage-1.png" alt="Sakura Spirit">
     </div>
 
     <div class="music-player">
@@ -141,11 +183,11 @@
         <p id="track-name">READY</p>
     </div>
 
-    <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
+    <button id="plant-btn" class="plant-btn">Nurture Forest (1,000 Petals)</button>
 </div>
 
 <script>
-    // 1. STATE & PLAYLIST
+    // 1. STATE
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastTick = Date.now(); 
     let isPlaying = false;
@@ -158,12 +200,7 @@
         { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
-    // 2. AUDIO SETUP
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
-    let currentSource;
-    let fallbackAudio = new Audio(); // Backup player if decoding fails
-
+    // 2. DOM ELEMENTS
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
@@ -172,7 +209,7 @@
 
     // 3. UI & GAME LOOP
     function updateUI() {
-        sapLabel.textContent = Math.floor(state.sap);
+        sapLabel.textContent = Math.floor(state.sap).toLocaleString();
         treeLabel.textContent = state.totalPlanted;
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
@@ -184,52 +221,61 @@
             lastTick = now;
             updateUI();
         }
-        const float = Math.sin(now / 1500) * 10;
-        const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.04;
+        
+        // Soft floating animation
+        const float = Math.sin(now / 2000) * 15;
+        const pulse = 1 + Math.sin(now / (isPlaying ? 800 : 3000)) * 0.03;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
+        
         requestAnimationFrame(gameLoop);
     }
 
-    // 4. GHIBLI PARTICLE SYSTEM
-    function createLeaf() {
-        const leaf = document.createElement('div');
-        leaf.className = 'leaf';
+    // 4. GHIBLI SAKURA PETAL SYSTEM
+    function createPetal() {
+        const petal = document.createElement('div');
+        petal.className = 'petal';
         
-        const startX = Math.random() * 100;
-        leaf.style.left = startX + 'vw';
-        leaf.style.top = '-20px';
+        const startX = Math.random() * 120 - 20; // Start slightly off-screen
+        petal.style.left = startX + 'vw';
+        petal.style.top = '-20px';
         
-        const scale = Math.random() * 0.7 + 0.3;
-        leaf.style.transform = `scale(${scale})`;
+        const scale = Math.random() * 0.5 + 0.5;
+        const rotation = Math.random() * 360;
+        petal.style.transform = `rotate(${rotation}deg) scale(${scale})`;
         
-        document.body.appendChild(leaf);
+        document.body.appendChild(petal);
 
-        const duration = Math.random() * 5000 + 5000;
-        const drift = (Math.random() * 150) - 75; // Random horizontal sway
+        const duration = Math.random() * 8000 + 7000;
+        const drift = (Math.random() * 300) + 100; // Drift across the screen
 
-        leaf.animate([
-            { transform: `translate(0, 0) rotate(0deg) scale(${scale})`, opacity: 0 },
-            { opacity: 0.6, offset: 0.15 },
-            { transform: `translate(${drift}px, 110vh) rotate(${Math.random() * 720}deg) scale(${scale})`, opacity: 0 }
+        petal.animate([
+            { transform: `translate(0, 0) rotate(${rotation}deg) scale(${scale})`, opacity: 0 },
+            { opacity: 0.8, offset: 0.1 },
+            { transform: `translate(${drift}px, 110vh) rotate(${rotation + 720}deg) scale(${scale})`, opacity: 0 }
         ], {
             duration: duration,
-            easing: 'ease-in-out'
-        }).onfinish = () => leaf.remove();
+            easing: 'linear'
+        }).onfinish = () => petal.remove();
     }
-    setInterval(createLeaf, 700); // Continuous falling leaves
+    
+    // Create petals more frequently for a "lush" feel
+    setInterval(createPetal, 400);
 
-    // 5. AUDIO LOGIC (Resilient Decoding)
+    // 5. AUDIO LOGIC
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    let currentSource;
+    let fallbackAudio = new Audio();
+
     async function playTrack() {
         if (!audioCtx) audioCtx = new AudioContext();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-        trackLabel.textContent = "CONNECTING...";
+        trackLabel.textContent = "TUNING SPIRIT...";
 
         try {
             const response = await fetch(playlist[currentTrackIndex].src);
             const arrayBuffer = await response.arrayBuffer();
-            
-            // Try high-quality decoding
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
             
             if (currentSource) currentSource.stop();
@@ -239,15 +285,13 @@
             currentSource.onended = () => { if(isPlaying) autoNext(); };
             currentSource.start(0);
 
-            trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
+            trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
             isPlaying = true;
         } catch (e) {
-            console.error("Encoding Error - Using Fallback", e);
-            // Fallback to basic audio element if decoding fails
             fallbackAudio.src = playlist[currentTrackIndex].src;
             fallbackAudio.play();
             fallbackAudio.onended = autoNext;
-            trackLabel.textContent = "LIVE (LEGACY): " + playlist[currentTrackIndex].name;
+            trackLabel.textContent = "NOW PLAYING: " + playlist[currentTrackIndex].name;
             isPlaying = true;
         }
         playBtn.textContent = "STOP RADIO";
@@ -277,7 +321,7 @@
             state.totalPlanted += 1;
             updateUI();
         } else {
-            alert("Need 1,000 Sap!");
+            alert("Need 1,000 more petals!");
         }
     };
 
