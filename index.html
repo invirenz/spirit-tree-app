@@ -118,4 +118,186 @@
     <div id="rpg-overlay" class="overlay">
         <h2 style="margin: 10px 0;">ZEN HARVEST</h2>
         <p style="font-size: 12px; margin-bottom: 10px;">Use <b>WASD</b> or <b>ARROWS</b> to harvest Orbs!</p>
-        <canvas id="
+        <canvas id="battle-canvas" width="300" height="350"></canvas>
+        <div id="battle-stats" style="margin-top: 10px; font-weight: bold; color: var(--sakura);">
+            ZEN: <span id="zen-pts">0</span>%
+        </div>
+        <button class="btn" style="width:150px; background:#555; margin-top: 15px;" onclick="stopBattle()">EXIT</button>
+    </div>
+
+    <div class="music-player">
+        <div class="player-bar">
+            <div id="yt-player-box"></div>
+            <div style="color:white; text-align: center;">
+                <div style="font-size: 9px; color: var(--sakura);">NOW PLAYING</div>
+                <div style="font-size: 11px; font-weight: bold; width: 120px; white-space: nowrap; overflow: hidden;">HOLLOW PURPLE - LOFI DEITY</div>
+            </div>
+            <input type="range" min="0" max="100" value="50" oninput="changeVol(this.value)">
+        </div>
+    </div>
+
+<script>
+    let player;
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('yt-player-box', {
+            height: '0', width: '0', 
+            videoId: '8pxD0cAApWo',
+            playerVars: { 'autoplay': 1, 'loop': 1, 'playlist': '8pxD0cAApWo' },
+            events: { 'onReady': (e) => e.target.setVolume(50) }
+        });
+    }
+    function changeVol(v) { if(player) player.setVolume(v); }
+
+    let s = JSON.parse(localStorage.getItem('SpiritTree_V8')) || { p: 0, trees: 0, treeLv: 1, zen: 0 };
+
+    function sync() {
+        document.getElementById('pts').innerText = Math.floor(s.p).toLocaleString();
+        document.getElementById('trees').innerText = s.trees;
+        const trunk = document.getElementById('main-trunk');
+        const lv = Math.min(s.treeLv, 100);
+        trunk.style.height = (25 + lv * 1.5) + 'px';
+        if(s.treeLv > 3) {
+            trunk.innerHTML = `<div class="foliage" style="width:${50+lv*2}px; height:${40+lv*1.5}px; top:-${25+lv}px; left:-${15+lv/2}px;"></div>`;
+        }
+        localStorage.setItem('SpiritTree_V8', JSON.stringify(s));
+    }
+
+    function enterHub() {
+        document.getElementById('entry-gate').style.display = 'none';
+        if(player) player.playVideo();
+        setInterval(() => { s.p += 0.3; sync(); }, 1000);
+    }
+
+    function startAd() {
+        const overlay = document.getElementById('ad-overlay');
+        const timerTxt = document.getElementById('ad-countdown');
+        overlay.style.display = 'flex';
+        let time = 15;
+        const cd = setInterval(() => {
+            time--;
+            timerTxt.innerText = time;
+            if(time <= 0) {
+                clearInterval(cd);
+                overlay.style.display = 'none';
+                s.trees++; s.p += 500; s.treeLv++;
+                sync();
+                alert("TREE PLANTED!");
+            }
+        }, 1000);
+    }
+
+    function pullSpirit() {
+        if(s.p < 500) return alert("Not enough petals!");
+        s.p -= 500;
+        const roll = Math.random() * 100;
+        let res = "RARE"; let col = "white";
+        if(roll < 0.5) { res = "GOD"; col = "var(--rarity-god)"; }
+        else if(roll < 3) { res = "MYTHIC"; col = "var(--rarity-mythic)"; }
+        document.getElementById('summon-card').innerText = res;
+        document.getElementById('summon-card').style.color = col;
+        sync();
+    }
+
+    // --- BATTLE GAME LOGIC ---
+    const canvas = document.getElementById('battle-canvas');
+    const ctx = canvas.getContext('2d');
+    let battleActive = false;
+    let playerPos = { x: 150, y: 175 };
+    let dots = [], ghosts = [];
+    let keys = {};
+
+    window.addEventListener('keydown', (e) => keys[e.code] = true);
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    function startBattle() {
+        openUI('rpg');
+        battleActive = true;
+        s.zen = 0;
+        playerPos = { x: 150, y: 175 };
+        dots = [];
+        for(let i=0; i<15; i++) {
+            dots.push({ x: Math.random()*260+20, y: Math.random()*310+20, collected: false });
+        }
+        ghosts = [
+            { x: 10, y: 10, vx: 2, vy: 2 },
+            { x: 260, y: 310, vx: -2, vy: -2 }
+        ];
+        requestAnimationFrame(battleLoop);
+    }
+
+    function battleLoop() {
+        if(!battleActive) return;
+        const speed = 4;
+        if (keys['KeyW'] || keys['ArrowUp']) playerPos.y -= speed;
+        if (keys['KeyS'] || keys['ArrowDown']) playerPos.y += speed;
+        if (keys['KeyA'] || keys['ArrowLeft']) playerPos.x -= speed;
+        if (keys['KeyD'] || keys['ArrowRight']) playerPos.x += speed;
+
+        playerPos.x = Math.max(12, Math.min(288, playerPos.x));
+        playerPos.y = Math.max(12, Math.min(338, playerPos.y));
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = "24px Arial";
+        ctx.fillText("✨", playerPos.x - 12, playerPos.y + 8);
+
+        dots.forEach(dot => {
+            if(!dot.collected) {
+                ctx.fillStyle = "cyan";
+                ctx.beginPath(); ctx.arc(dot.x, dot.y, 4, 0, Math.PI*2); ctx.fill();
+                if(Math.hypot(playerPos.x - dot.x, playerPos.y - dot.y) < 15) {
+                    dot.collected = true;
+                    s.zen = Math.min(100, s.zen + 7);
+                    document.getElementById('zen-pts').innerText = s.zen;
+                }
+            }
+        });
+
+        ghosts.forEach(g => {
+            g.x += g.vx; g.y += g.vy;
+            if(g.x < 0 || g.x > 270) g.vx *= -1;
+            if(g.y < 0 || g.y > 320) g.vy *= -1;
+            ctx.fillText("👹", g.x, g.y + 20);
+            if(Math.hypot(playerPos.x - (g.x + 12), playerPos.y - (g.y + 12)) < 18) {
+                battleActive = false; alert("Exorcised! Battle Lost."); closeUI();
+            }
+        });
+
+        if(dots.every(d => d.collected)) {
+            battleActive = false; s.p += 1500; sync();
+            alert("ZEN HARVEST COMPLETE! +1500 🌸"); closeUI();
+        } else {
+            requestAnimationFrame(battleLoop);
+        }
+    }
+
+    function stopBattle() { battleActive = false; closeUI(); }
+    function openUI(id) { document.getElementById(id + '-overlay').style.display = 'flex'; }
+    function closeUI() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
+
+    // INITIALIZE
+    if(new URLSearchParams(window.location.search).get('mode') === 'game') {
+        document.body.innerHTML = `<div onclick="jump()" style="width:100vw; height:100vh; background:#3498db; position:relative;">
+            <div id="sc" style="position:absolute; width:100%; text-align:center; top:50px; color:white; font-size:60px; font-weight:bold;">0</div>
+            <div id="pl" style="position:absolute; left:50px; font-size:50px;">🧹</div>
+        </div>`;
+        let py=300, pv=0, score=0;
+        window.jump = () => pv = -9;
+        function loop() {
+            pv += 0.4; py += pv; document.getElementById('pl').style.top = py + 'px';
+            if(py > window.innerHeight || py < -100) {
+                let d = JSON.parse(localStorage.getItem('SpiritTree_V8'));
+                d.p += Math.floor(score/10); localStorage.setItem('SpiritTree_V8', JSON.stringify(d));
+                window.location.href = window.location.origin + window.location.pathname; return;
+            }
+            score++; document.getElementById('sc').innerText = Math.floor(score/10);
+            requestAnimationFrame(loop);
+        }
+        loop();
+    } else { sync(); }
+</script>
+</body>
+</html>
