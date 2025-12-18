@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" href="data:;base64,iVBORw0KGgo="> <title>Spirit Tree | Global Radio</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <title>Spirit Tree | Global Radio</title>
     <style>
         body {
             background-color: #050a05;
@@ -60,6 +61,19 @@
             pointer-events: none;
         }
 
+        /* GHIBLI LEAF PARTICLES */
+        .leaf {
+            position: absolute;
+            background: #78ffd6;
+            width: 10px;
+            height: 15px;
+            border-radius: 2px 10px 2px 10px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 8px rgba(120, 255, 214, 0.4);
+        }
+
         .music-player {
             margin-top: 20px;
             padding: 20px;
@@ -82,7 +96,6 @@
             letter-spacing: 2px;
             transition: 0.2s;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-            pointer-events: auto;
         }
 
         .plant-btn {
@@ -96,23 +109,12 @@
             font-size: 0.9rem;
         }
 
-        /* GHIBLI LEAVES */
-        .leaf {
-            position: absolute;
-            background: #78ffd6;
-            width: 10px;
-            height: 15px;
-            border-radius: 2px 10px 2px 10px;
-            opacity: 0.5;
-            pointer-events: none;
-            z-index: 5;
-        }
-
         #track-name {
             font-size: 0.75rem;
             opacity: 0.8;
             margin-top: 15px;
             letter-spacing: 1px;
+            min-height: 1.2em;
         }
 
         @keyframes pulseAura {
@@ -136,13 +138,14 @@
 
     <div class="music-player">
         <button id="play-btn" class="play-btn">START RADIO</button>
-        <p id="track-name">SIGNAL READY</p>
+        <p id="track-name">READY</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
 
 <script>
+    // 1. STATE & PLAYLIST
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastTick = Date.now(); 
     let isPlaying = false;
@@ -155,10 +158,11 @@
         { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
+    // 2. AUDIO SETUP
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     let currentSource;
-    let backupAudio = new Audio(); // Compatibility fallback
+    let fallbackAudio = new Audio(); // Backup player if decoding fails
 
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
@@ -166,13 +170,13 @@
     const treeLabel = document.getElementById('tree-count');
     const treeArt = document.getElementById('tree-art');
 
+    // 3. UI & GAME LOOP
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
-    // --- SAP LOOP ---
     function gameLoop() {
         const now = Date.now();
         if (now - lastTick >= 1000) {
@@ -186,83 +190,87 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // --- LEAF PARTICLES ---
+    // 4. GHIBLI PARTICLE SYSTEM
     function createLeaf() {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
-        leaf.style.left = Math.random() * 100 + 'vw';
+        
+        const startX = Math.random() * 100;
+        leaf.style.left = startX + 'vw';
         leaf.style.top = '-20px';
-        const sizeScale = Math.random() * 0.8 + 0.4;
-        leaf.style.transform = `scale(${sizeScale}) rotate(${Math.random() * 360}deg)`;
+        
+        const scale = Math.random() * 0.7 + 0.3;
+        leaf.style.transform = `scale(${scale})`;
+        
         document.body.appendChild(leaf);
 
-        leaf.animate([
-            { transform: `translate(0, 0) rotate(0deg)`, opacity: 0 },
-            { opacity: 0.5, offset: 0.1 },
-            { transform: `translate(${Math.random() * 100 - 50}px, 110vh) rotate(360deg)`, opacity: 0 }
-        ], { duration: Math.random() * 4000 + 4000 }).onfinish = () => leaf.remove();
-    }
-    setInterval(createLeaf, 600);
+        const duration = Math.random() * 5000 + 5000;
+        const drift = (Math.random() * 150) - 75; // Random horizontal sway
 
-    // --- AUDIO HANDLING WITH FALLBACK ---
-    async function playCurrentTrack() {
-        trackLabel.textContent = "DECODING...";
-        trackLabel.style.color = "#e0ffe0";
+        leaf.animate([
+            { transform: `translate(0, 0) rotate(0deg) scale(${scale})`, opacity: 0 },
+            { opacity: 0.6, offset: 0.15 },
+            { transform: `translate(${drift}px, 110vh) rotate(${Math.random() * 720}deg) scale(${scale})`, opacity: 0 }
+        ], {
+            duration: duration,
+            easing: 'ease-in-out'
+        }).onfinish = () => leaf.remove();
+    }
+    setInterval(createLeaf, 700); // Continuous falling leaves
+
+    // 5. AUDIO LOGIC (Resilient Decoding)
+    async function playTrack() {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+        trackLabel.textContent = "CONNECTING...";
 
         try {
-            // Attempt 1: High Quality Web Audio
-            if (!audioCtx) audioCtx = new AudioContext();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-
             const response = await fetch(playlist[currentTrackIndex].src);
             const arrayBuffer = await response.arrayBuffer();
+            
+            // Try high-quality decoding
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-
+            
             if (currentSource) currentSource.stop();
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = audioBuffer;
             currentSource.connect(audioCtx.destination);
-            currentSource.onended = nextTrack;
+            currentSource.onended = () => { if(isPlaying) autoNext(); };
             currentSource.start(0);
-            
+
             trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
             isPlaying = true;
-        } catch (err) {
-            console.warn("Decoding failed, trying fallback...", err);
-            
-            // Attempt 2: Standard HTML5 Fallback
-            backupAudio.src = playlist[currentTrackIndex].src;
-            backupAudio.play().then(() => {
-                trackLabel.textContent = "LIVE (COMPAT): " + playlist[currentTrackIndex].name;
-                isPlaying = true;
-            }).catch(e => {
-                trackLabel.textContent = "FORMAT NOT SUPPORTED";
-                trackLabel.style.color = "#ff5555";
-            });
-            backupAudio.onended = nextTrack;
+        } catch (e) {
+            console.error("Encoding Error - Using Fallback", e);
+            // Fallback to basic audio element if decoding fails
+            fallbackAudio.src = playlist[currentTrackIndex].src;
+            fallbackAudio.play();
+            fallbackAudio.onended = autoNext;
+            trackLabel.textContent = "LIVE (LEGACY): " + playlist[currentTrackIndex].name;
+            isPlaying = true;
         }
         playBtn.textContent = "STOP RADIO";
     }
 
-    function nextTrack() {
-        if(isPlaying) {
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-            playCurrentTrack();
-        }
+    function autoNext() {
+        currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+        playTrack();
     }
 
     playBtn.onclick = () => {
         if (!isPlaying) {
-            playCurrentTrack();
+            playTrack();
         } else {
             if (currentSource) currentSource.stop();
-            backupAudio.pause();
+            fallbackAudio.pause();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
-            trackLabel.textContent = "SIGNAL PAUSED";
+            trackLabel.textContent = "PAUSED";
         }
     };
 
+    // 6. BUTTON LOGIC
     document.getElementById('plant-btn').onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
