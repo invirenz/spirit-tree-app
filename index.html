@@ -84,12 +84,6 @@
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
         }
 
-        .play-btn:disabled {
-            background: #444;
-            color: #888;
-            cursor: not-allowed;
-        }
-
         .plant-btn {
             background: none;
             border: 1px solid #00ffff;
@@ -101,26 +95,17 @@
             font-size: 0.9rem;
         }
 
-        .leaf {
-            position: absolute;
-            background: #00ffff;
-            border-radius: 50%;
-            opacity: 0.2;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes pulseAura {
-            0% { opacity: 0.2; transform: scale(0.9); }
-            100% { opacity: 0.5; transform: scale(1.1); }
-        }
-
         #track-name {
             font-size: 0.75rem;
             opacity: 0.8;
             margin-top: 15px;
             letter-spacing: 1px;
             min-height: 1.2em;
+        }
+
+        @keyframes pulseAura {
+            0% { opacity: 0.2; transform: scale(0.9); }
+            100% { opacity: 0.5; transform: scale(1.1); }
         }
     </style>
 </head>
@@ -139,16 +124,16 @@
 
     <div class="music-player">
         <button id="play-btn" class="play-btn">START RADIO</button>
-        <p id="track-name">CONNECTING...</p>
+        <p id="track-name">SIGNAL READY</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
 
 <script>
-    // 1. STATE & PLAYLIST
+    // 1. STATE MANAGEMENT
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
-    let lastUpdateTime = Date.now();
+    let lastTick = Date.now(); // We match your snippet's logic here
     let isPlaying = false;
     let currentTrackIndex = 0;
 
@@ -159,92 +144,100 @@
         { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
-    const audio = new Audio();
+    // 2. WEB AUDIO API SETUP
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    let currentSource;
+
     const playBtn = document.getElementById('play-btn');
     const trackLabel = document.getElementById('track-name');
     const sapLabel = document.getElementById('sap-count');
     const treeLabel = document.getElementById('tree-count');
     const treeArt = document.getElementById('tree-art');
 
-    // 2. UI UPDATES
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
         localStorage.setItem('spiritTreeSave', JSON.stringify(state));
     }
 
+    // 3. GAME LOOP (Corrected logic from your snippet)
     function gameLoop() {
         const now = Date.now();
-        if (now - lastUpdateTime >= 1000) {
+        
+        // Match the sap accumulation logic
+        if (now - lastTick >= 1000) {
             state.sap += 1;
-            lastUpdateTime = now;
+            lastTick = now;
             updateUI();
         }
+
+        // Animation logic
         const float = Math.sin(now / 1500) * 10;
         const pulse = 1 + Math.sin(now / (isPlaying ? 400 : 2000)) * 0.04;
         if(treeArt) treeArt.style.transform = `translateY(${float}px) scale(${pulse})`;
+        
         requestAnimationFrame(gameLoop);
     }
 
-    // 3. THE BLOB FETCH FIX (Forces the browser to accept the data)
-    async function loadAndPlay() {
-        const track = playlist[currentTrackIndex];
-        trackLabel.textContent = "LOADING SIGNAL...";
-        playBtn.disabled = true;
+    // 4. AUDIO DECODING LOGIC
+    async function playCurrentTrack() {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
 
+        trackLabel.textContent = "DECODING SIGNAL...";
+        
         try {
-            const response = await fetch(track.src);
-            if (!response.ok) throw new Error('Network error');
+            const response = await fetch(playlist[currentTrackIndex].src);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+            if (currentSource) currentSource.stop();
             
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
+            currentSource = audioCtx.createBufferSource();
+            currentSource.buffer = audioBuffer;
+            currentSource.connect(audioCtx.destination);
             
-            audio.src = url;
-            await audio.play();
-            
+            currentSource.onended = () => {
+                if(isPlaying) {
+                    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+                    playCurrentTrack();
+                }
+            };
+
+            currentSource.start(0);
             isPlaying = true;
-            playBtn.disabled = false;
             playBtn.textContent = "STOP RADIO";
-            trackLabel.textContent = "LIVE: " + track.name;
-            trackLabel.style.color = "#00ffff";
+            trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
         } catch (err) {
             console.error(err);
-            trackLabel.textContent = "SIGNAL LOST. TRY AGAIN.";
-            playBtn.disabled = false;
+            trackLabel.textContent = "SIGNAL ERROR. TAP AGAIN.";
+            isPlaying = false;
         }
     }
 
-    async function toggleRadio() {
-        if (audio.paused || !isPlaying) {
-            await loadAndPlay();
+    playBtn.onclick = () => {
+        if (!isPlaying) {
+            playCurrentTrack();
         } else {
-            audio.pause();
+            if (currentSource) currentSource.stop();
             isPlaying = false;
             playBtn.textContent = "START RADIO";
             trackLabel.textContent = "SIGNAL PAUSED";
         }
-    }
-
-    playBtn.onclick = toggleRadio;
-
-    audio.onended = () => {
-        currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-        loadAndPlay();
     };
 
-    // 4. TREE PLANTING
+    // 5. TREE PLANTING
     document.getElementById('plant-btn').onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
             updateUI();
-            fetch('/api/plant', { method: 'POST' }).catch(() => {});
         } else {
             alert("Need 1,000 Sap!");
         }
-    };
+    }
 
-    // 5. VISUALS
     function createLeaf() {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
@@ -253,13 +246,4 @@
         leaf.style.width = size;
         leaf.style.height = size;
         document.body.appendChild(leaf);
-        leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], { duration: 6000 }).onfinish = () => leaf.remove();
-    }
-
-    setInterval(createLeaf, 2000);
-    trackLabel.textContent = "RADIO READY";
-    updateUI();
-    requestAnimationFrame(gameLoop);
-</script>
-</body>
-</html>
+        leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], { duration: 6000 }).onfinish = ()
