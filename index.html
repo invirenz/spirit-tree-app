@@ -36,7 +36,7 @@
             border: 1px solid rgba(255,255,255,0.5);
         }
 
-        /* TREE EVOLUTION (1-100) */
+        /* TREE EVOLUTION */
         #tree-stage { height: 180px; display: flex; align-items: flex-end; justify-content: center; margin: 20px; }
         .trunk { width: 20px; background: #5d4037; position: relative; border-radius: 5px; transition: 0.8s ease; }
         .leaves { 
@@ -54,130 +54,17 @@
         }
         .game-card:hover { transform: translateY(-5px); border-color: var(--sakura); }
 
-        /* FOOTER RADIO (Lofi Deity Focus) */
+        /* FOOTER RADIO & VOLUME */
         .footer {
             position: absolute; bottom: 20px; width: 100%;
             display: flex; flex-direction: column; align-items: center; z-index: 1000;
         }
-        .radio {
-            width: 300px; height: 65px; border-radius: 20px; 
-            overflow: hidden; border: 3px solid white; background: black;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        .radio-container {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 25px;
+            border: 2px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+        .volume-row { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 12px; }
+        input[type=range] { cursor: pointer; accent-color: var(--sakura); }
 
-        .nurture-btn {
-            background: var(--green); color: white; border: none;
-            padding: 15px; border-radius: 50px; width: 100%;
-            font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-
-    <div id="hub-ui" class="panel">
-        <h1 style="margin:0; font-size: 1.5rem;">Sakura Spirit</h1>
-        <h2 id="p-display" style="color: var(--green);">0 🌸</h2>
-        <p>Tree Level: <span id="lv-display">1</span> / 100</p>
-
-        <div id="tree-stage"><div id="tree-core"></div></div>
-        
-        <button class="nurture-btn" onclick="nurture()">Nurture Tree (1,000 🌸)</button>
-
-        <div class="game-grid">
-            <div class="game-card" onclick="openGame('delivery')">🧹 Delivery<br><small>Fly & Earn</small></div>
-            <div class="game-card" onclick="openGame('rpg')">⚔️ Battle<br><small>Level Up</small></div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <div class="radio">
-            <iframe width="100%" height="65" src="https://www.youtube.com/embed/8pxD0cAApWo?autoplay=1&loop=1&playlist=8pxD0cAApWo" frameborder="0" allow="autoplay"></iframe>
-        </div>
-        <div style="color: white; font-size: 11px; font-weight: bold; margin-top: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">MUSIC: HOLLOW PURPLE BY LOFI DEITY</div>
-    </div>
-
-<script>
-    // --- LOAD STATE ---
-    let state = JSON.parse(localStorage.getItem('AnimeHub_Final')) || {
-        p: 0, tree: 1, wLv: 1, atk: 15, hp: 100, max: 100
-    };
-
-    function sync() {
-        if(document.getElementById('p-display')) {
-            document.getElementById('p-display').textContent = Math.floor(state.p).toLocaleString() + " 🌸";
-            document.getElementById('lv-display').textContent = state.tree;
-
-            const tree = document.getElementById('tree-core');
-            tree.innerHTML = '';
-            tree.className = 'trunk';
-            const lv = Math.min(state.tree, 100);
-            tree.style.height = (25 + lv * 1.3) + 'px';
-            tree.style.width = (12 + lv / 7) + 'px';
-            
-            if(state.tree > 5) {
-                const l = document.createElement('div');
-                l.className = 'leaves';
-                l.style.width = (50 + lv * 2) + 'px';
-                l.style.height = (40 + lv * 1.5) + 'px';
-                l.style.top = `-${25 + lv}px`;
-                l.style.left = `-${15 + lv}px`;
-                tree.appendChild(l);
-            }
-        }
-        localStorage.setItem('AnimeHub_Final', JSON.stringify(state));
-    }
-
-    function nurture() {
-        if(state.p >= 1000 && state.tree < 100) { state.p -= 1000; state.tree++; sync(); }
-    }
-
-    function openGame(type) {
-        window.open(window.location.href + "?mode=" + type, '_blank');
-    }
-
-    function spawnPetal() {
-        const p = document.createElement('div');
-        p.className = 'petal';
-        p.style.left = Math.random() * 100 + 'vw';
-        p.style.width = (Math.random() * 10 + 5) + 'px'; p.style.height = p.style.width;
-        document.body.appendChild(p);
-        p.animate([{ top: '-5%' }, { top: '105%', transform: `translateX(${Math.random()*100}px) rotate(360deg)` }], 
-        { duration: Math.random()*3000 + 4000 }).onfinish = () => p.remove();
-    }
-    
-    // Auto-update from other tabs
-    window.addEventListener('storage', () => {
-        state = JSON.parse(localStorage.getItem('AnimeHub_Final'));
-        sync();
-    });
-
-    // --- MODE SWITCHER (For New Windows) ---
-    const mode = new URLSearchParams(window.location.search).get('mode');
-
-    if (mode === 'delivery') {
-        document.body.innerHTML = `<div style="width:100vw; height:100vh; background:var(--sky); overflow:hidden;" id="game" onclick="jump()"><div id="score" style="position:absolute; top:50px; width:100%; text-align:center; font-size:50px; color:white; font-weight:bold;">0</div><div id="player" style="position:absolute; left:50px; font-size:50px;">🧹</div></div>`;
-        let py = 300, pv = 0, score = 0, clouds = [];
-        window.jump = () => { pv = -9; };
-        function gLoop() {
-            pv += 0.35; py += pv; const p = document.getElementById('player'); p.style.top = py + 'px';
-            p.style.transform = `rotate(${Math.min(30, pv*3)}deg)`;
-            if(py > window.innerHeight || py < -100) end();
-            if(Math.random() < 0.012) {
-                const c = document.createElement('div'); c.style.position = 'absolute'; c.style.background = 'white';
-                c.style.width = '150px'; c.style.height = '60px'; c.style.borderRadius = '50px';
-                c.style.right = '-200px'; c.style.top = Math.random() * 80 + '%'; c.style.filter = 'blur(4px)';
-                document.getElementById('game').appendChild(c); clouds.push(c);
-            }
-            clouds.forEach((c, i) => {
-                let r = parseInt(c.style.right || -200) + 7; c.style.right = r + 'px';
-                let rect = c.getBoundingClientRect(), pRect = p.getBoundingClientRect();
-                if(pRect.left < rect.right && pRect.right > rect.left && pRect.top < rect.bottom && pRect.bottom > rect.top) end();
-                if(r > window.innerWidth + 200) { c.remove(); clouds.splice(i,1); score += 10; document.getElementById('score').textContent = score; }
-            });
-            requestAnimationFrame(gLoop);
-        }
-        function end() { state.p += score; localStorage.setItem('AnimeHub_Final', JSON.stringify(state)); alert("Score: " + score); window.close(); }
-        gLoop();
-    } 
-    else if (mode === 'rpg') {
-        document.
+        .
