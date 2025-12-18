@@ -6,9 +6,10 @@
     <title>Spirit Tree | Indie Radio</title>
     <style>
         body {
-            background: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
+            background-color: #050a05;
+            background-image: radial-gradient(circle, #0a1a1a 0%, #050a05 100%);
             color: #e0ffe0;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -18,13 +19,15 @@
             overflow: hidden;
         }
 
-        #ui-container { z-index: 10; text-align: center; }
+        #ui-container { 
+            z-index: 10; 
+            text-align: center; 
+        }
 
         .stats {
             font-size: 1.2rem;
             letter-spacing: 2px;
             margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
         }
 
         #spirit-display {
@@ -32,36 +35,41 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 30px 0;
+            margin-top: 30px;
+            margin-bottom: 30px;
         }
 
         #tree-art {
             width: 240px;
             height: auto;
             z-index: 2;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7));
+            filter: drop-shadow(0px 0px 15px rgba(0, 255, 255, 0.7));
         }
 
         .aura {
             position: absolute;
             width: 350px;
             height: 350px;
-            background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            background-image: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
             border-radius: 50%;
             z-index: 1;
-            animation: pulseAura 4s infinite alternate ease-in-out;
+            animation-name: pulseAura;
+            animation-duration: 4s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: ease-in-out;
         }
 
         .music-player {
             margin-top: 20px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             border: 1px solid rgba(0, 255, 255, 0.2);
         }
 
         .play-btn {
-            background: #00ffff;
+            background-color: #00ffff;
             border: none;
             color: #050a05;
             padding: 10px 25px;
@@ -73,7 +81,7 @@
         }
 
         .plant-btn {
-            background: none;
+            background-color: transparent;
             border: 1px solid #00ffff;
             color: #00ffff;
             padding: 12px 30px;
@@ -85,15 +93,14 @@
 
         .leaf {
             position: absolute;
-            background: #00ffff;
+            background-color: #00ffff;
             border-radius: 50%;
             opacity: 0.4;
-            box-shadow: 0 0 8px #00ffff;
         }
 
         @keyframes pulseAura {
-            0% { opacity: 0.1; transform: scale(0.9); }
-            100% { opacity: 0.4; transform: scale(1.1); }
+            from { opacity: 0.1; transform: scale(0.9); }
+            to { opacity: 0.4; transform: scale(1.1); }
         }
     </style>
 </head>
@@ -137,7 +144,7 @@
 
         function loadTrack(index) {
             audio.src = playlist[index].src;
-            trackLabel.innerText = `NOW PLAYING: ${playlist[index].name}`;
+            trackLabel.innerText = "NOW PLAYING: " + playlist[index].name;
         }
 
         loadTrack(currentTrackIndex);
@@ -152,7 +159,7 @@
             }
         }
 
-        audio.onended = () => {
+        audio.onended = function() {
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
             loadTrack(currentTrackIndex);
             audio.play();
@@ -170,7 +177,8 @@
             const treeArt = document.getElementById('tree-art');
             if (treeArt) {
                 const scale = 1 + Math.sin(now / (isPlaying ? 200 : 1000)) * 0.03;
-                treeArt.style.transform = `translateY(${Math.sin(now/1500)*10}px) scale(${scale})`;
+                const drift = Math.sin(now / 1500) * 10;
+                treeArt.style.transform = "translateY(" + drift + "px) scale(" + scale + ")";
             }
             requestAnimationFrame(tick);
         }
@@ -178,12 +186,13 @@
         function createParticle() {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
-            leaf.style.left = Math.random() * 100 + 'vw';
-            const size = Math.random() * 5 + 3;
-            leaf.style.width = size + 'px'; leaf.style.height = size + 'px';
+            leaf.style.left = (Math.random() * 100) + 'vw';
+            const size = (Math.random() * 5 + 3) + 'px';
+            leaf.style.width = size; 
+            leaf.style.height = size;
             document.body.appendChild(leaf);
             leaf.animate([{ transform: 'translateY(-10vh)' }, { transform: 'translateY(110vh)' }], 
-            { duration: Math.random() * 3000 + 4000 }).onfinish = () => leaf.remove();
+            { duration: Math.random() * 3000 + 4000 }).onfinish = function() { leaf.remove(); };
         }
         setInterval(createParticle, 1000);
 
