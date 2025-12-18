@@ -104,16 +104,17 @@
             z-index: 0;
         }
 
-        @keyframes pulseAura {
-            0% { opacity: 0.2; transform: scale(0.9); }
-            100% { opacity: 0.5; transform: scale(1.1); }
-        }
-
         #track-name {
             font-size: 0.75rem;
             opacity: 0.8;
             margin-top: 15px;
             letter-spacing: 1px;
+            min-height: 1.2em;
+        }
+
+        @keyframes pulseAura {
+            0% { opacity: 0.2; transform: scale(0.9); }
+            100% { opacity: 0.5; transform: scale(1.1); }
         }
     </style>
 </head>
@@ -131,25 +132,26 @@
     </div>
 
     <div class="music-player">
-        <button id="play-btn" class="play-btn">START RADIO</button>
-        <p id="track-name">SIGNAL READY</p>
+        <button id="play-btn" class="play-btn">Tap to Start</button>
+        <p id="track-name">Radio Ready</p>
     </div>
 
     <button id="plant-btn" class="plant-btn">Plant Global Tree (1,000 Sap)</button>
 </div>
 
 <script>
+    // 1. STATE & PLAYLIST
     let state = JSON.parse(localStorage.getItem('spiritTreeSave')) || { sap: 0, totalPlanted: 0 };
     let lastUpdateTime = Date.now();
     let isPlaying = false;
     let currentTrackIndex = 0;
 
-    // --- RE-CODED TO USE CLEAN UNDERSCORE PATHS ---
+    // Use these exact names after renaming files in GitHub
     const playlist = [
-        { name: "After Light", src: "assets/After_Light_mastered.mp3" }, 
-        { name: "Get Away", src: "assets/Get_Away_mastered.mp3" },
-        { name: "Half of Me", src: "assets/Half_of_Me_mastered.mp3" },
-        { name: "W.D.I.D.", src: "assets/WDID.mp3" }
+        { name: "After Light", src: "assets/after_light.mp3" },
+        { name: "Get Away", src: "assets/get_away.mp3" },
+        { name: "Half of Me", src: "assets/half_of_me.mp3" },
+        { name: "W.D.I.D.", src: "assets/wdid.mp3" }
     ];
 
     const audio = new Audio();
@@ -159,6 +161,7 @@
     const treeLabel = document.getElementById('tree-count');
     const treeArt = document.getElementById('tree-art');
 
+    // 2. UI UPDATES
     function updateUI() {
         sapLabel.textContent = Math.floor(state.sap);
         treeLabel.textContent = state.totalPlanted;
@@ -178,30 +181,30 @@
         requestAnimationFrame(gameLoop);
     }
 
+    // 3. AUDIO LOGIC (The Fix)
     async function toggleRadio() {
-        // Force the source only if it's empty
+        // Step 1: Force reset source to clear "NotSupportedError"
         if (!audio.src || audio.src === "" || audio.src.endsWith(window.location.pathname)) {
             audio.src = playlist[currentTrackIndex].src;
             audio.load();
         }
 
-        if (audio.paused) {
-            try {
+        try {
+            if (audio.paused) {
                 await audio.play();
                 isPlaying = true;
-                playBtn.textContent = "STOP RADIO";
+                playBtn.textContent = "Stop Radio";
                 trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
                 trackLabel.style.color = "#00ffff";
-            } catch (e) {
-                // If the browser blocks it, we tell the user to click again.
-                trackLabel.textContent = "INTERACTION BLOCKED: TAP AGAIN";
-                console.error("Playback failed", e);
+            } else {
+                audio.pause();
+                isPlaying = false;
+                playBtn.textContent = "Start Radio";
+                trackLabel.textContent = "Radio Paused";
             }
-        } else {
-            audio.pause();
-            isPlaying = false;
-            playBtn.textContent = "START RADIO";
-            trackLabel.textContent = "SIGNAL PAUSED";
+        } catch (err) {
+            console.error(err);
+            trackLabel.textContent = "Syncing... Tap again!";
         }
     }
 
@@ -214,13 +217,13 @@
         trackLabel.textContent = "LIVE: " + playlist[currentTrackIndex].name;
     };
 
-    // If there is a file error, we will see it here
     audio.onerror = () => {
-        trackLabel.textContent = "FILE NOT FOUND: " + playlist[currentTrackIndex].src;
+        trackLabel.textContent = "Error loading audio file.";
         trackLabel.style.color = "#ff5555";
     };
 
-    document.getElementById('plant-btn').onclick = async () => {
+    // 4. TREE PLANTING
+    document.getElementById('plant-btn').onclick = () => {
         if (state.sap >= 1000) {
             state.sap -= 1000;
             state.totalPlanted += 1;
@@ -231,6 +234,7 @@
         }
     };
 
+    // 5. VISUALS
     function createLeaf() {
         const leaf = document.createElement('div');
         leaf.className = 'leaf';
