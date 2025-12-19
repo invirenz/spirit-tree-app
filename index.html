@@ -19,7 +19,7 @@
             user-select: none;
         }
         
-        /* AESTHETICS: PETALS */
+        /* THE AESTHETIC: PETALS */
         #petal-container { position: fixed; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .petal { position: absolute; background: var(--sakura); border-radius: 150% 0 150% 0; opacity: 0.4; animation: fall linear infinite; }
         @keyframes fall { 
@@ -28,7 +28,7 @@
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } 
         }
 
-        /* HUB CARD */
+        /* HUB CARD STYLE */
         #main-wrapper { height: calc(100% - 240px); display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; }
         .hub-card { 
             background: var(--ui-white); padding: 30px; border-radius: 40px; 
@@ -53,11 +53,11 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box; }
         input[type="email"] { padding: 12px; border-radius: 25px; border: none; width: 85%; margin-bottom: 10px; outline: none; text-align: center; font-size: 1rem; }
 
-        /* PLAYER */
+        /* MUSIC ENGINE UI */
         .music-player { position: fixed; bottom: 120px; width: 100%; display: flex; justify-content: center; z-index: 1000; }
         .player-bar { background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 50px; border: 1px solid var(--sakura); display: flex; align-items: center; gap: 15px; }
         
-        /* REVENUE & LEGAL */
+        /* AD FOOTER & LEGAL */
         #ad-footer { position: fixed; bottom: 0; left: 0; width: 100%; height: 90px; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: center; align-items: center; z-index: 9000; }
         .legal-footer { position: fixed; bottom: 95px; width: 100%; text-align: center; font-size: 10px; color: #666; z-index: 500; }
         .legal-footer a { color: #555; text-decoration: none; margin: 0 5px; font-weight: bold; }
@@ -82,15 +82,15 @@
     </div>
 
     <div class="legal-footer">
-        <a href="privacy.html">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="mailto:your-email@example.com">Contact</a>
+        <a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a> | <a href="mailto:your-email@example.com">Contact</a>
         <p>© 2025 Spirit Tree Hub - Powered by Lofi Deity</p>
     </div>
 
     <div id="signup-overlay" class="overlay">
         <h2 style="color: var(--sakura)">SECURE YOUR FOREST</h2>
         <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 20px;">Enter your email to enable cloud saving<br>and earn affiliate bonuses.</p>
-        <input type="email" id="user-email" placeholder="email@example.com">
-        <button class="btn" onclick="captureEmail()">SYNC PROGRESS</button>
+        <input type="email" id="user-email" placeholder="email@example.com" required>
+        <button class="btn" id="sync-btn" onclick="captureEmail()">SYNC PROGRESS</button>
         <p style="font-size: 0.7rem; margin-top: 15px; cursor: pointer; text-decoration: underline;" onclick="closeSignup()">Continue without saving</p>
     </div>
 
@@ -136,13 +136,13 @@
             const start = performance.now();
             debugger; 
             if (performance.now() - start > 100) {
-                document.body.innerHTML = "<div style='background:#000; color:var(--sakura); height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif;'><h1>DEV TOOLS RESTRICTED</h1></div>";
+                document.body.innerHTML = "<div style='background:#000; color:var(--sakura); height:100vh; display:flex; align-items:center; justify-content:center;'><h1>DEV TOOLS RESTRICTED</h1></div>";
             }
         };
         setInterval(block, 500);
     })();
 
-    // --- 2. ENGINE & DATA ---
+    // --- 2. GAME ENGINE & DATA ---
     let _D = { p: 0, t: 0, l: 1, s: false, e: "" };
 
     function sync() {
@@ -167,15 +167,42 @@
 
     function showSignup() { document.getElementById('signup-overlay').style.display = 'flex'; }
     function closeSignup() { document.getElementById('signup-overlay').style.display = 'none'; }
+
+    // --- FORMSPREE AJAX INTEGRATION ---
     function captureEmail() {
         const email = document.getElementById('user-email').value;
-        if(email.includes('@')) {
-            _D.e = email; _D.s = true; sync(); closeSignup();
-            alert("Success! Your progress is now saved to this browser.");
-        } else { alert("Invalid Email Address."); }
+        const btn = document.getElementById('sync-btn');
+        if(!email.includes('@')) { alert("Please enter a valid email."); return; }
+
+        btn.innerText = "SYNCING...";
+        btn.disabled = true;
+
+        fetch("https://formspree.io/f/xzdpzgqk", {
+            method: "POST",
+            body: JSON.stringify({ 
+                email: email, 
+                message: "New user synced progress.",
+                currentTrees: _D.t,
+                currentPoints: Math.floor(_D.p)
+            }),
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+        }).then(response => {
+            if (response.ok) {
+                _D.e = email; _D.s = true; 
+                sync(); 
+                closeSignup();
+                alert("Progress Synced! Check your email for future bonuses.");
+            } else {
+                throw new Error();
+            }
+        }).catch(error => {
+            alert("Connection error. Progress saved locally.");
+            btn.innerText = "SYNC PROGRESS";
+            btn.disabled = false;
+        });
     }
 
-    // --- 3. MUSIC ---
+    // --- 3. MUSIC PLAYER ---
     let player;
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
@@ -189,7 +216,7 @@
     }
     function changeVol(v) { if(player) player.setVolume(v); }
 
-    // --- 4. REWARD AD ---
+    // --- 4. REWARDED AD LOGIC ---
     function startAd() {
         document.getElementById('ad-overlay').style.display = 'flex';
         try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
@@ -206,7 +233,7 @@
         }, 1000);
     }
 
-    // --- 5. ZEN GAME ---
+    // --- 5. ZEN HARVEST GAME ---
     const canvas = document.getElementById('battle-canvas'), ctx = canvas.getContext('2d');
     let battleActive = false, playerPos = { x: 150, y: 175 }, dots = [], ghosts = [], keys = {};
     window.addEventListener('keydown', e => keys[e.code] = true);
@@ -237,7 +264,7 @@
     }
     function stopBattle() { battleActive = false; document.getElementById('rpg-overlay').style.display = 'none'; }
 
-    // --- 6. PETALS & INIT ---
+    // --- 6. PETAL ANIMATION ---
     function createPetals() {
         const container = document.getElementById('petal-container');
         for(let i=0; i<15; i++) {
