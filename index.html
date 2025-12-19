@@ -9,112 +9,85 @@
      crossorigin="anonymous"></script>
 
     <style>
-        :root {
-            --sakura: #ffb7c5;
-            --green: #2ecc71;
-            --soft-blue: #a1c4fd;
-        }
-
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(180deg, var(--soft-blue) 0%, #c2e9fb 100%);
-            overflow: hidden;
-        }
-
-        /* AMBIENT BACKGROUND PETALS */
-        #petal-container { position: fixed; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        .petal {
-            position: absolute; background: var(--sakura);
-            border-radius: 150% 0 150% 0;
-            opacity: 0.4; animation: fall linear infinite;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.4; }
-            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-        }
-
-        /* MAIN DASHBOARD */
-        #main-wrapper {
-            height: calc(100% - 200px); 
-            display: flex; align-items: center; justify-content: center;
-            position: relative; z-index: 10;
-        }
-
-        .hub-card {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 30px; border-radius: 40px;
-            width: 320px; text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            border: 2px solid white; backdrop-filter: blur(10px);
-        }
-
-        #tree-display { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin: 20px 0; }
-        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s ease; }
-        .foliage { 
-            position: absolute; background: var(--sakura); 
-            border-radius: 50%; filter: blur(2px); transition: 0.8s ease;
-            box-shadow: 0 0 20px var(--sakura);
-        }
-
-        .stat-grid { display: flex; justify-content: space-around; margin-bottom: 15px; font-weight: bold; font-size: 1.3rem; }
+        :root { --sakura: #ffb7c5; --green: #2ecc71; --ui-white: rgba(255, 255, 255, 0.85); }
         
-        .btn {
-            background: var(--green); color: white; border: none;
-            padding: 14px; border-radius: 50px; width: 100%;
-            font-weight: bold; cursor: pointer; margin-top: 10px;
-            box-shadow: 0 4px 0 #27ae60; transition: 0.1s;
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); 
+            overflow: hidden; 
+            user-select: none; /* Anti-copy */
         }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
-        .btn-ad { background: #3498db; box-shadow: 0 4px 0 #2980b9; }
-
-        /* OVERLAYS FOR ADS AND GAMES */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 2000; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-            color: white; text-align: center;
-        }
-
-        /* AD REVENUE LAYOUT */
-        .music-player {
-            position: fixed; bottom: 100px; width: 100%;
-            display: flex; justify-content: center; z-index: 1000;
-        }
-        .player-bar {
-            background: rgba(0,0,0,0.8); padding: 12px 25px; border-radius: 50px;
-            border: 1px solid var(--sakura); display: flex; align-items: center; gap: 15px;
+        
+        /* THE AESTHETIC: PETALS */
+        #petal-container { position: fixed; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .petal { position: absolute; background: var(--sakura); border-radius: 150% 0 150% 0; opacity: 0.4; animation: fall linear infinite; }
+        @keyframes fall { 
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; } 
+            10% { opacity: 0.4; } 
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } 
         }
 
-        #ad-footer {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
-            background: #fff; border-top: 1px solid #eee;
-            display: flex; justify-content: center; align-items: center; z-index: 9000;
+        /* THE AESTHETIC: GLASSMORPISM HUB */
+        #main-wrapper { height: calc(100% - 200px); display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; }
+        .hub-card { 
+            background: var(--ui-white); padding: 30px; border-radius: 40px; 
+            width: 310px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.1); 
+            border: 2px solid white; backdrop-filter: blur(15px); 
         }
+        
+        /* TREE PHYSICS */
+        #tree-display { height: 150px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 15px; }
+        .trunk { width: 22px; background: #5d4037; position: relative; border-radius: 6px; transition: 0.8s ease; }
+        .foliage { position: absolute; background: var(--sakura); border-radius: 50%; filter: blur(2px); transition: 0.8s ease; box-shadow: 0 0 20px var(--sakura); }
+        
+        .stat-grid { display: flex; justify-content: space-around; margin: 10px 0; font-weight: 900; font-size: 1.3rem; color: #444; }
+        
+        .btn { background: var(--green); color: white; border: none; padding: 14px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 5px 0 #27ae60; transition: 0.1s; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
+        .btn-ad { background: #3498db; box-shadow: 0 5px 0 #2980b9; }
+        
+        .save-warning { font-size: 0.7rem; color: #e74c3c; margin-top: 12px; font-weight: bold; cursor: pointer; text-decoration: underline; }
+
+        /* OVERLAYS */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; box-sizing: border-box; }
+        
+        input[type="email"] { padding: 12px; border-radius: 25px; border: none; width: 85%; margin-bottom: 10px; outline: none; text-align: center; font-size: 1rem; }
+
+        /* MUSIC ENGINE */
+        .music-player { position: fixed; bottom: 105px; width: 100%; display: flex; justify-content: center; z-index: 1000; }
+        .player-bar { background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 50px; border: 1px solid var(--sakura); display: flex; align-items: center; gap: 15px; }
+        
+        /* REVENUE UNITS */
+        #ad-footer { position: fixed; bottom: 0; left: 0; width: 100%; height: 90px; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: center; align-items: center; z-index: 9000; }
     </style>
 </head>
-<body>
-
-    <div id="petal-container"></div>
+<body oncontextmenu="return false;"> <div id="petal-container"></div>
 
     <div id="main-wrapper">
         <div class="hub-card">
-            <h2 style="margin:0; font-size: 0.9rem; color: #666; letter-spacing: 2px;">SPIRIT TREE HUB</h2>
+            <h2 id="session-title" style="margin:0; font-size: 0.7rem; color: #999; letter-spacing: 3px;">GUEST SESSION</h2>
             <div class="stat-grid">
                 <div>🌸 <span id="pts">0</span></div>
                 <div>🌳 <span id="trees">0</span></div>
             </div>
-            
             <div id="tree-display"><div id="main-trunk" class="trunk"></div></div>
-            
             <button class="btn btn-ad" onclick="startAd()">📺 WATCH AD (+1 Tree)</button>
             <button class="btn" style="background:#e74c3c;" onclick="startBattle()">⚔️ ZEN HARVEST</button>
+            <div class="save-warning" id="save-link" onclick="showSignup()">⚠️ PROGRESS NOT SAVED. SIGN UP.</div>
         </div>
     </div>
 
+    <div id="signup-overlay" class="overlay">
+        <h2 style="color: var(--sakura)">SECURE YOUR FOREST</h2>
+        <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 20px;">Enter your email to enable cloud saving<br>and earn affiliate bonuses.</p>
+        <input type="email" id="user-email" placeholder="email@example.com">
+        <button class="btn" onclick="captureEmail()">SYNC PROGRESS</button>
+        <p style="font-size: 0.7rem; margin-top: 15px; cursor: pointer; text-decoration: underline;" onclick="closeSignup()">Continue without saving</p>
+    </div>
+
     <div id="ad-overlay" class="overlay">
-        <h2 style="color: var(--sakura)">SUPPORTING THE PLANET</h2>
+        <h2 style="color: var(--sakura)">GROWTH VERIFICATION</h2>
         <div id="ad-countdown" style="font-size: 4rem; color: var(--green); margin: 15px;">15</div>
         <div style="width:300px; height:250px; background:#111; display:flex; align-items:center; justify-content:center; border: 1px solid #333;">
             <ins class="adsbygoogle"
@@ -127,8 +100,8 @@
 
     <div id="rpg-overlay" class="overlay">
         <h2>ZEN HARVEST</h2>
-        <canvas id="battle-canvas" width="300" height="350" style="background:#000; border: 2px solid var(--sakura); border-radius: 15px;"></canvas>
-        <div id="battle-stats" style="margin-top: 15px; font-weight: bold; color: cyan;">SYNC: <span id="zen-pts">0</span>%</div>
+        <canvas id="battle-canvas" width="300" height="350" style="background:#000; border: 2px solid var(--sakura); border-radius: 20px;"></canvas>
+        <div id="battle-stats" style="margin-top: 15px; font-weight: bold; color: cyan;">FOCUS: <span id="zen-pts">0</span>%</div>
         <button class="btn" style="width:150px; background:#333;" onclick="stopBattle()">EXIT</button>
     </div>
 
@@ -136,7 +109,7 @@
         <div class="player-bar">
             <div id="yt-player-box"></div>
             <div style="color:white; font-size: 11px; font-weight: bold;">LOFI DEITY RADIO</div>
-            <input type="range" min="0" max="100" value="50" oninput="changeVol(this.value)">
+            <input type="range" min="0" max="100" value="50" oninput="changeVol(this.value)" style="accent-color: var(--sakura);">
         </div>
     </div>
 
@@ -149,11 +122,62 @@
     </div>
 
 <script>
+    // --- 1. DEVELOPER CONSOLE BLOCKER (SECURE VERSION) ---
+    (function() {
+        const block = () => {
+            const start = performance.now();
+            debugger; 
+            if (performance.now() - start > 100) {
+                document.body.innerHTML = "<div style='background:#000; color:var(--sakura); height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif;'><h1>DEV TOOLS RESTRICTED</h1></div>";
+            }
+        };
+        setInterval(block, 500);
+    })();
+
+    // --- 2. ENGINE & DATA ---
+    let _D = { p: 0, t: 0, l: 1, s: false, e: "" };
+
+    function sync() {
+        document.getElementById('pts').innerText = Math.floor(_D.p).toLocaleString();
+        document.getElementById('trees').innerText = _D.t;
+        const trunk = document.getElementById('main-trunk');
+        const lv = Math.min(_D.l, 100);
+        trunk.style.height = (25 + lv * 1.5) + 'px';
+        if(_D.l > 3) {
+            trunk.innerHTML = `<div class="foliage" style="width:${50+lv*2}px; height:${40+lv*1.5}px; top:-${25+lv}px; left:-${15+lv/2}px;"></div>`;
+        }
+
+        if(_D.s) {
+            localStorage.setItem('_spirit_secure_session', btoa(JSON.stringify(_D)));
+            document.getElementById('save-link').style.display = 'none';
+            document.getElementById('session-title').innerText = "SYNCED ACCOUNT";
+        } else {
+            document.getElementById('save-link').style.display = 'block';
+            document.getElementById('session-title').innerText = "GUEST SESSION";
+        }
+    }
+
+    function showSignup() { document.getElementById('signup-overlay').style.display = 'flex'; }
+    function closeSignup() { document.getElementById('signup-overlay').style.display = 'none'; }
+
+    function captureEmail() {
+        const email = document.getElementById('user-email').value;
+        if(email.includes('@')) {
+            _D.e = email;
+            _D.s = true;
+            sync();
+            closeSignup();
+            alert("Success! Your progress is now saved to this browser.");
+        } else {
+            alert("Invalid Email Address.");
+        }
+    }
+
+    // --- 3. MUSIC PLAYER ---
     let player;
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
-
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('yt-player-box', {
             height: '0', width: '0', videoId: '8pxD0cAApWo',
@@ -163,20 +187,7 @@
     }
     function changeVol(v) { if(player) player.setVolume(v); }
 
-    let s = JSON.parse(localStorage.getItem('SpiritTree_V13')) || { p: 0, trees: 0, treeLv: 1 };
-
-    function sync() {
-        document.getElementById('pts').innerText = Math.floor(s.p).toLocaleString();
-        document.getElementById('trees').innerText = s.trees;
-        const trunk = document.getElementById('main-trunk');
-        const lv = Math.min(s.treeLv, 100);
-        trunk.style.height = (25 + lv * 1.5) + 'px';
-        if(s.treeLv > 3) {
-            trunk.innerHTML = `<div class="foliage" style="width:${50+lv*2}px; height:${40+lv*1.5}px; top:-${25+lv}px; left:-${15+lv/2}px;"></div>`;
-        }
-        localStorage.setItem('SpiritTree_V13', JSON.stringify(s));
-    }
-
+    // --- 4. REVENUE POPUP ---
     function startAd() {
         document.getElementById('ad-overlay').style.display = 'flex';
         let time = 15;
@@ -186,13 +197,13 @@
             if(time <= 0) {
                 clearInterval(cd);
                 document.getElementById('ad-overlay').style.display = 'none';
-                s.trees++; s.p += 500; s.treeLv++;
+                _D.t++; _D.p += 500; _D.l++;
                 sync();
             }
         }, 1000);
     }
 
-    // --- GAME ENGINE ---
+    // --- 5. ZEN HARVEST GAME ---
     const canvas = document.getElementById('battle-canvas'), ctx = canvas.getContext('2d');
     let battleActive = false, playerPos = { x: 150, y: 175 }, dots = [], ghosts = [], keys = {};
     window.addEventListener('keydown', e => keys[e.code] = true);
@@ -216,14 +227,14 @@
                 g.x += g.vx; g.y += g.vy; if(g.x<0 || g.x>270) g.vx *= -1; if(g.y<0 || g.y>320) g.vy *= -1; ctx.fillText("👹", g.x, g.y+20);
                 if(Math.hypot(playerPos.x-(g.x+12), playerPos.y-(g.y+12))<18) { battleActive=false; stopBattle(); }
             });
-            if(dots.every(d=>d.c)) { battleActive=false; s.p += 1500; sync(); stopBattle(); }
+            if(dots.every(d=>d.c)) { battleActive=false; _D.p += 1500; sync(); stopBattle(); }
             else { requestAnimationFrame(loop); }
         }
         loop();
     }
     function stopBattle() { battleActive = false; document.getElementById('rpg-overlay').style.display = 'none'; }
 
-    // AMBIENT PETALS
+    // --- 6. PETALS & INIT ---
     function createPetals() {
         const container = document.getElementById('petal-container');
         for(let i=0; i<15; i++) {
@@ -237,8 +248,10 @@
     }
 
     createPetals();
+    const session = localStorage.getItem('_spirit_secure_session');
+    if(session) { try { _D = JSON.parse(atob(session)); } catch(e) {} }
     sync();
-    setInterval(() => { s.p += 0.3; sync(); }, 1000);
+    setInterval(() => { _D.p += 0.3; sync(); }, 1000);
 </script>
 </body>
 </html>
