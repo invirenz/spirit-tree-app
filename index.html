@@ -23,8 +23,9 @@
             overflow: hidden;
         }
 
+        /* MAIN CONTENT AREA */
         #main-wrapper {
-            height: calc(100% - 90px);
+            height: calc(100% - 190px); /* Leaves room for Player + Ad */
             display: flex; align-items: center; justify-content: center;
         }
 
@@ -75,20 +76,39 @@
             touch-action: none;
         }
 
+        /* MUSIC PLAYER - FIXED POSITION ABOVE AD */
         .music-player {
-            position: absolute; bottom: 100px; width: 100%;
-            display: flex; flex-direction: column; align-items: center; z-index: 1000;
+            position: fixed; 
+            bottom: 100px; /* 10px gap + 90px Ad height */
+            width: 100%;
+            display: flex; flex-direction: column; align-items: center; 
+            z-index: 1000;
         }
         .player-bar {
-            background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 50px;
-            border: 2px solid var(--sakura); display: flex; align-items: center; gap: 15px;
+            background: rgba(0,0,0,0.85); 
+            padding: 10px 20px; 
+            border-radius: 50px;
+            border: 2px solid var(--sakura); 
+            display: flex; 
+            align-items: center; 
+            gap: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
+        input[type=range] { accent-color: var(--sakura); cursor: pointer; width: 80px; }
 
-        /* 2. THE REVENUE ZONE: ADSENSE FOOTER */
+        /* AD FOOTER - PINNED TO ABSOLUTE BOTTOM */
         #ad-footer {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
-            background: white; border-top: 1px solid #ddd;
-            display: flex; justify-content: center; align-items: center; z-index: 9000;
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 90px;
+            background: #fff; 
+            border-top: 1px solid #ddd;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9000;
         }
     </style>
 </head>
@@ -96,49 +116,58 @@
 
     <div id="entry-gate">
         <h1 style="color: #2c3e50; letter-spacing: 2px;">SPIRIT TREE</h1>
+        <p style="color: #7f8c8d;">Featuring Music by <b>Lofi Deity</b></p>
         <button class="btn" style="width: 200px;" onclick="enterHub()">ENTER HUB</button>
     </div>
 
     <div id="main-wrapper">
         <div class="hub-card">
-            <h2 style="margin:0; font-size: 1.1rem; color: #555;">SAKURA HUB</h2>
+            <h2 style="margin:0; font-size: 1.1rem; color: #555;">SAKURA SPIRIT HUB</h2>
             <div class="stat-grid">
                 <div>🌸 <span id="pts">0</span></div>
                 <div>🌳 <span id="trees">0</span></div>
             </div>
             <div id="tree-display"><div id="main-trunk" class="trunk"></div></div>
             <button class="btn" onclick="openUI('summon')">✨ SUMMON SPIRIT (500 🌸)</button>
-            
             <button class="btn btn-ad" onclick="startAd()">📺 WATCH AD (Plant 1 Tree)</button>
-            
             <button class="btn" style="background:#e74c3c;" onclick="startBattle()">⚔️ ZEN HARVEST</button>
         </div>
     </div>
 
+    <div id="summon-overlay" class="overlay">
+        <h2>SPIRIT GATE</h2>
+        <div id="summon-card" style="font-size: 3rem; margin: 30px; font-weight: bold;">?</div>
+        <button class="btn" style="width:200px" onclick="pullSpirit()">SPEND 500 🌸</button>
+        <button class="btn" style="width:200px; background:#555" onclick="closeUI()">BACK</button>
+    </div>
+
     <div id="ad-overlay" class="overlay">
-        <h2>SPONSORED MESSAGE</h2>
-        <div id="ad-countdown" style="font-size: 3rem; color: var(--green);">15</div>
-        <div style="width: 300px; height: 250px; background: #000; display: flex; align-items: center; justify-content: center;">
-             <ins class="adsbygoogle"
-                  style="display:inline-block;width:300px;height:250px"
-                  data-ad-client="ca-pub-5420213092544779"
-                  data-ad-slot="6789012345"></ins>
-             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-        </div>
-        <p>Stay here to plant your tree!</p>
+        <h2>PLANTING IN PROGRESS...</h2>
+        <div id="ad-countdown" style="font-size: 3rem; color: var(--green); margin: 20px;">15</div>
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:300px;height:250px"
+             data-ad-client="ca-pub-5420213092544779"
+             data-ad-slot="YOUR_OVERLAY_SLOT"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        <p>Support the planet by watching the ad.</p>
     </div>
 
     <div id="rpg-overlay" class="overlay">
-        <h2>ZEN HARVEST</h2>
+        <h2 style="margin: 10px 0;">ZEN HARVEST</h2>
         <canvas id="battle-canvas" width="300" height="350"></canvas>
-        <div id="battle-stats">ZEN: <span id="zen-pts">0</span>%</div>
-        <button class="btn" style="width:150px; background:#555;" onclick="stopBattle()">EXIT</button>
+        <div id="battle-stats" style="margin-top: 10px; font-weight: bold; color: var(--sakura);">
+            ZEN: <span id="zen-pts">0</span>%
+        </div>
+        <button class="btn" style="width:150px; background:#555; margin-top: 15px;" onclick="stopBattle()">EXIT</button>
     </div>
 
     <div class="music-player">
         <div class="player-bar">
             <div id="yt-player-box"></div>
-            <div style="color:white; font-size: 11px;">LOFI DEITY RADIO</div>
+            <div style="color:white; text-align: center;">
+                <div style="font-size: 9px; color: var(--sakura);">NOW PLAYING</div>
+                <div style="font-size: 11px; font-weight: bold; width: 120px; white-space: nowrap; overflow: hidden;">HOLLOW PURPLE - LOFI DEITY</div>
+            </div>
             <input type="range" min="0" max="100" value="50" oninput="changeVol(this.value)">
         </div>
     </div>
@@ -147,7 +176,7 @@
         <ins class="adsbygoogle"
              style="display:inline-block;width:728px;height:90px"
              data-ad-client="ca-pub-5420213092544779"
-             data-ad-slot="1234567890"></ins>
+             data-ad-slot="YOUR_FOOTER_SLOT"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
@@ -159,21 +188,26 @@
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('yt-player-box', {
-            height: '0', width: '0', videoId: '8pxD0cAApWo',
+            height: '0', width: '0', 
+            videoId: '8pxD0cAApWo',
             playerVars: { 'autoplay': 1, 'loop': 1, 'playlist': '8pxD0cAApWo' },
             events: { 'onReady': (e) => e.target.setVolume(50) }
         });
     }
     function changeVol(v) { if(player) player.setVolume(v); }
 
-    let s = JSON.parse(localStorage.getItem('SpiritTree_Final')) || { p: 0, trees: 0, treeLv: 1 };
+    let s = JSON.parse(localStorage.getItem('SpiritTree_V8')) || { p: 0, trees: 0, treeLv: 1, zen: 0 };
 
     function sync() {
         document.getElementById('pts').innerText = Math.floor(s.p).toLocaleString();
         document.getElementById('trees').innerText = s.trees;
         const trunk = document.getElementById('main-trunk');
-        trunk.style.height = (25 + s.treeLv * 1.5) + 'px';
-        localStorage.setItem('SpiritTree_Final', JSON.stringify(s));
+        const lv = Math.min(s.treeLv, 100);
+        trunk.style.height = (25 + lv * 1.5) + 'px';
+        if(s.treeLv > 3) {
+            trunk.innerHTML = `<div class="foliage" style="width:${50+lv*2}px; height:${40+lv*1.5}px; top:-${25+lv}px; left:-${15+lv/2}px;"></div>`;
+        }
+        localStorage.setItem('SpiritTree_V8', JSON.stringify(s));
     }
 
     function enterHub() {
@@ -182,24 +216,35 @@
         setInterval(() => { s.p += 0.3; sync(); }, 1000);
     }
 
-    // THE UPDATED AD FUNCTION
     function startAd() {
-        document.getElementById('ad-overlay').style.display = 'flex';
+        const overlay = document.getElementById('ad-overlay');
+        overlay.style.display = 'flex';
         let time = 15;
         const cd = setInterval(() => {
             time--;
             document.getElementById('ad-countdown').innerText = time;
             if(time <= 0) {
                 clearInterval(cd);
-                document.getElementById('ad-overlay').style.display = 'none';
+                overlay.style.display = 'none';
                 s.trees++; s.p += 500; s.treeLv++;
                 sync();
-                alert("AD WATCHED! +1 TREE PLANTED");
             }
         }, 1000);
     }
 
-    // --- BATTLE ENGINE ---
+    function pullSpirit() {
+        if(s.p < 500) return alert("Not enough petals!");
+        s.p -= 500;
+        const roll = Math.random() * 100;
+        let res = "RARE"; let col = "white";
+        if(roll < 0.5) { res = "GOD"; col = "var(--rarity-god)"; }
+        else if(roll < 3) { res = "MYTHIC"; col = "var(--rarity-mythic)"; }
+        document.getElementById('summon-card').innerText = res;
+        document.getElementById('summon-card').style.color = col;
+        sync();
+    }
+
+    // --- ZEN HARVEST ENGINE ---
     const canvas = document.getElementById('battle-canvas');
     const ctx = canvas.getContext('2d');
     let battleActive = false, playerPos = { x: 150, y: 175 }, dots = [], ghosts = [], keys = {};
@@ -207,21 +252,37 @@
     window.addEventListener('keyup', e => keys[e.code] = false);
 
     function startBattle() {
-        openUI('rpg'); battleActive = true; s.zen = 0;
+        openUI('rpg'); battleActive = true; s.zen = 0; playerPos = { x: 150, y: 175 };
         dots = Array.from({length: 15}, () => ({x: Math.random()*260+20, y: Math.random()*310+20, c: false}));
-        ghosts = [{x: 10, y: 10, vx: 2, vy: 2}];
+        ghosts = [{x: 10, y: 10, vx: 2, vy: 2}, {x: 260, y: 310, vx: -2, vy: -2}];
         requestAnimationFrame(battleLoop);
     }
 
     function battleLoop() {
         if(!battleActive) return;
-        if(keys['ArrowUp']) playerPos.y -= 4; if(keys['ArrowDown']) playerPos.y += 4;
-        if(keys['ArrowLeft']) playerPos.x -= 4; if(keys['ArrowRight']) playerPos.x += 4;
-        ctx.clearRect(0,0,300,350);
-        ctx.fillText("✨", playerPos.x-10, playerPos.y+10);
-        dots.forEach(d => { if(!d.c) { ctx.beginPath(); ctx.arc(d.x, d.y, 4, 0, 7); ctx.fill(); if(Math.hypot(playerPos.x-d.x, playerPos.y-d.y)<15) d.c=true; } });
-        if(dots.every(d=>d.c)) { alert("Zen Complete!"); battleActive=false; s.p += 1000; sync(); closeUI(); }
-        requestAnimationFrame(battleLoop);
+        if(keys['ArrowUp'] || keys['KeyW']) playerPos.y -= 4;
+        if(keys['ArrowDown'] || keys['KeyS']) playerPos.y += 4;
+        if(keys['ArrowLeft'] || keys['KeyA']) playerPos.x -= 4;
+        if(keys['ArrowRight'] || keys['KeyD']) playerPos.x += 4;
+        playerPos.x = Math.max(12, Math.min(288, playerPos.x));
+        playerPos.y = Math.max(12, Math.min(338, playerPos.y));
+        ctx.clearRect(0, 0, 300, 350);
+        ctx.font = "24px Arial";
+        ctx.fillText("✨", playerPos.x - 12, playerPos.y + 8);
+        dots.forEach(d => {
+            if(!d.c) {
+                ctx.fillStyle = "cyan"; ctx.beginPath(); ctx.arc(d.x, d.y, 4, 0, 7); ctx.fill();
+                if(Math.hypot(playerPos.x - d.x, playerPos.y - d.y) < 15) { d.c = true; s.zen += 7; document.getElementById('zen-pts').innerText = Math.min(100, s.zen); }
+            }
+        });
+        ghosts.forEach(g => {
+            g.x += g.vx; g.y += g.vy;
+            if(g.x < 0 || g.x > 270) g.vx *= -1; if(g.y < 0 || g.y > 320) g.vy *= -1;
+            ctx.fillText("👹", g.x, g.y + 20);
+            if(Math.hypot(playerPos.x - (g.x+12), playerPos.y - (g.y+12)) < 18) { battleActive = false; alert("Exorcised!"); closeUI(); }
+        });
+        if(dots.every(d => d.c)) { battleActive = false; s.p += 1500; sync(); alert("ZEN COMPLETE!"); closeUI(); }
+        else { requestAnimationFrame(battleLoop); }
     }
 
     function openUI(id) { document.getElementById(id + '-overlay').style.display = 'flex'; }
